@@ -12,7 +12,6 @@ import {
   Camera,
   Ruler,
   MessageSquare,
-  CreditCard,
   Settings,
   Palette,
   Package,
@@ -97,7 +96,6 @@ export function getCoachNav(t: Dictionary, opts?: { branding?: boolean; teamCtx?
     {
       items: [
         { label: n.messages, href: "/coach/messages", icon: MessageSquare },
-        { label: n.subscription, href: "/coach/subscription", icon: CreditCard, permission: "canManageSubscriptions" },
         { label: n.team, href: "/coach/team", icon: UserCog, permission: "canManageTeam" },
         ...(opts?.branding ? [{ label: n.branding, href: "/coach/branding", icon: Palette, permission: "canAccessBranding" as const }] : []),
         { label: n.settings, href: "/coach/settings", icon: Settings },

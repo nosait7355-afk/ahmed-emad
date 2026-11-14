@@ -34,7 +34,7 @@ function BrandLogo() {
       {brand.logo ? (
         <Image src={brand.logo} alt={brand.academyName} width={36} height={36} className="shrink-0 rounded object-contain" />
       ) : (
-        <Image src="/favicon.png" alt={brand.academyName} width={36} height={36} className="shrink-0" priority />
+        <Image src="/brand/logo.webp" alt={brand.academyName} width={36} height={36} className="shrink-0 rounded-full" priority />
       )}
       {brand.logo ? (
         <span className="text-lg font-bold tracking-tight">{brand.academyName}</span>
@@ -152,9 +152,6 @@ export function DashboardShell({
             <span className="flex-1 text-foreground/90">
               {t.dashboard.ui.readOnlyBanner}
             </span>
-            <Button asChild size="sm" variant="default">
-              <Link href="/coach/subscription">{t.account.upgradeNow}</Link>
-            </Button>
           </div>
         )}
 

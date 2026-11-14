@@ -2,7 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminCtx } from "./guards";
-import { runAction, ok, type ActionResult } from "./result";
+import { runAction, ok, fail, type ActionResult } from "./result";
+import {
+  CoachAccountError,
+  createCoachAccount,
+  makeCoachPermanent,
+  setPrimaryCoach,
+} from "@/lib/services/coach-account";
+import { adminCreateCoachSchema, type AdminCreateCoachInput } from "@/lib/validations/auth";
 import * as admin from "@/lib/services/admin";
 import * as plans from "@/lib/services/plans";
 import { setCoachBrandingEnabled } from "@/lib/services/feature-access";
@@ -13,6 +20,67 @@ import type { PlanInput } from "@/lib/services/plans";
 import { logError } from "@/lib/logging/error-log";
 
 /* ---- Coach management ---- */
+
+function coachAccountFailure(e: unknown): ActionResult<never> | null {
+  if (!(e instanceof CoachAccountError)) return null;
+  const field = e.code === "USERNAME_TAKEN" ? "username" : e.code === "EMAIL_TAKEN" ? "email" : undefined;
+  return fail(e.message, e.code, field);
+}
+
+/** Single-trainer mode: create a permanent coach (first one becomes the primary coach). */
+export async function createCoachAction(
+  input: AdminCreateCoachInput,
+): Promise<ActionResult<{ coachId: string; isPrimary: boolean }>> {
+  return runAction(async () => {
+    await getAdminCtx();
+    const parsed = adminCreateCoachSchema.safeParse(input);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return fail(issue?.message ?? "بيانات غير صالحة", "VALIDATION", issue?.path[0] as string | undefined);
+    }
+    try {
+      const res = await createCoachAccount(parsed.data);
+      revalidatePath("/admin/coaches");
+      return ok(res);
+    } catch (e) {
+      const f = coachAccountFailure(e);
+      if (f) return f;
+      throw e;
+    }
+  });
+}
+
+/** Attach all future public sign-ups to this coach. */
+export async function setPrimaryCoachAction(coachId: string): Promise<ActionResult> {
+  return runAction(async () => {
+    await getAdminCtx();
+    try {
+      await setPrimaryCoach(coachId);
+    } catch (e) {
+      const f = coachAccountFailure(e);
+      if (f) return f;
+      throw e;
+    }
+    revalidatePath("/admin/coaches");
+    return ok();
+  });
+}
+
+/** Remove trial/expiry/limits from an existing coach. */
+export async function makeCoachPermanentAction(coachId: string): Promise<ActionResult> {
+  return runAction(async () => {
+    await getAdminCtx();
+    try {
+      await makeCoachPermanent(coachId);
+    } catch (e) {
+      const f = coachAccountFailure(e);
+      if (f) return f;
+      throw e;
+    }
+    revalidatePath("/admin/coaches");
+    return ok();
+  });
+}
 
 export async function setCoachStatusAction(
   coachId: string,

@@ -13,6 +13,8 @@ export interface ISettings {
   /** WhatsApp number (international format, no +) used by "Contact Administration". */
   adminWhatsapp: string;
   supportEmail?: string;
+  /** Single-trainer mode: the coach every public client sign-up is attached to. */
+  primaryCoach?: Types.ObjectId | null;
   payment: {
     vodafoneCashNumber?: string;
     instapayHandle?: string;
@@ -30,10 +32,11 @@ export interface ISettings {
 const SettingsSchema = new Schema<ISettings>(
   {
     key: { type: String, default: "global", unique: true },
-    platformName: { type: String, default: "FITXNET" },
-    domain: { type: String, default: "fitxnet.com" },
+    platformName: { type: String, default: "Ahmed Emad" },
+    domain: { type: String, default: "" },
     adminWhatsapp: { type: String, default: "201000000000" },
-    supportEmail: { type: String, default: "support@fitxnet.com" },
+    supportEmail: { type: String, default: "" },
+    primaryCoach: { type: Schema.Types.ObjectId, ref: "User", default: null },
     payment: {
       vodafoneCashNumber: { type: String, default: "" },
       instapayHandle: { type: String, default: "" },

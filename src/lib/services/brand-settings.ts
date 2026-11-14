@@ -7,7 +7,7 @@ export type BrandSettings = NonNullable<
 
 /** FITXNET's own default branding — used whenever a coach has no white-label config. */
 export const FITXNET_DEFAULT_BRAND: BrandSettings = {
-  academyName: "FITXNET",
+  academyName: "Ahmed Emad",
   logo: undefined,
   primaryColor: "#DC2626",
   secondaryColor: "#111827",

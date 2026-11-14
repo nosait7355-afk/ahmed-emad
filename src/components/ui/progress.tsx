@@ -27,7 +27,7 @@ const Progress = React.forwardRef<
       {...props}
     >
       <div
-        className={cn("h-full rounded-full bg-primary transition-all", indicatorClassName)}
+        className={cn("h-full rounded-full bg-primary transition-all duration-700 ease-out", indicatorClassName)}
         style={{ width: `${clamped}%` }}
       />
     </div>

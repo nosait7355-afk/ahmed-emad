@@ -25,9 +25,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { formatNumber } from "@/lib/utils";
 import { GOAL_LABELS, label } from "@/lib/i18n/labels";
-import { SubscriptionCountdown } from "@/components/dashboard/subscription-countdown";
-import { getCoachSubscriptionLiveAction } from "@/lib/actions/subscription";
-import { coachIsFrozen } from "@/lib/permissions";
 import type { AccountStatus, ClientGoal } from "@/lib/constants";
 
 export interface CoachKpis {
@@ -53,7 +50,6 @@ export interface RecentClient {
 
 export function CoachDashboard({
   kpis,
-  subscription,
   recentClients,
   growthSeries,
   adherenceSeries,
@@ -83,41 +79,6 @@ export function CoachDashboard({
           </Button>
         )}
       </PageHeader>
-
-      <Card className="mb-4">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4 text-sm">
-          <div>
-            <p className="text-xs text-muted-foreground">{L("الخطة الحالية", "Current plan")}</p>
-            <p className="font-semibold">{subscription.planName ?? "—"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{L("الوقت المتبقي", "Time remaining")}</p>
-            {subscription.endDate ? (
-              <SubscriptionCountdown
-                endDate={subscription.endDate}
-                expired={coachIsFrozen(subscription.status)}
-                renewHref="/coach/subscription"
-                onPoll={async () => {
-                  const res = await getCoachSubscriptionLiveAction();
-                  if (!res.ok) return null;
-                  return { expired: coachIsFrozen(res.data!.status), endDate: res.data!.endDate };
-                }}
-              />
-            ) : (
-              <p className="font-semibold">—</p>
-            )}
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{L("العملاء", "Clients")}</p>
-            <p className="font-semibold">
-              {subscription.clientCount} / {subscription.maxClients > 0 ? subscription.maxClients : "∞"}
-            </p>
-          </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/coach/subscription">{t.dashboard.coachNav.subscription}</Link>
-          </Button>
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label={s.myClients} value={formatNumber(kpis.myClients, locale)} icon={Users} />

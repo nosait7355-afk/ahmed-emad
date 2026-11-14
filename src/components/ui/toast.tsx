@@ -51,10 +51,10 @@ export function Toaster() {
         <div
           key={t.id}
           className={cn(
-            "pointer-events-auto flex items-center gap-2 rounded-md border px-4 py-3 text-sm shadow-lg max-w-sm",
+            "pointer-events-auto flex max-w-sm animate-scale-in items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium shadow-elevated backdrop-blur-xl",
             t.variant === "error"
-              ? "bg-destructive text-destructive-foreground border-destructive"
-              : "bg-primary text-primary-foreground border-primary",
+              ? "border-transparent bg-destructive/95 text-destructive-foreground"
+              : "border-transparent bg-foreground/90 text-background",
           )}
         >
           {t.variant === "error" ? (

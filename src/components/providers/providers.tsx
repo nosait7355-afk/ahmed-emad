@@ -1,5 +1,6 @@
 "use client";
 
+import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "./theme-provider";
 import { I18nProvider } from "./i18n-provider";
 import { Toaster } from "@/components/ui/toast";
@@ -15,7 +16,8 @@ export function Providers({
   return (
     <ThemeProvider>
       <I18nProvider initialLocale={locale}>
-        {children}
+        {/* Every framer-motion animation respects the OS "reduce motion" setting. */}
+        <MotionConfig reducedMotion="user">{children}</MotionConfig>
         <Toaster />
       </I18nProvider>
     </ThemeProvider>

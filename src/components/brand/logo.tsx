@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { BRAND } from "@/config/brand";
 
-/** Unified "FITXNET" wordmark: FIT/NET in the default text color, X in brand red. */
+/** "AHMED EMAD" wordmark: first word in the text color, second in brand red. */
 export function BrandText({ className }: { className?: string }) {
   return (
-    <span className={cn("font-bold tracking-tight", className)}>
-      FIT<span className="text-primary">X</span>NET
+    <span dir="ltr" className={cn("font-extrabold tracking-tight", className)}>
+      {BRAND.wordmark.first} <span className="text-primary">{BRAND.wordmark.second}</span>
     </span>
   );
 }
@@ -23,19 +24,19 @@ export function Logo({
   size?: "sm" | "md" | "lg";
 }) {
   const sizes = {
-    sm: { box: 28, text: "text-base" },
-    md: { box: 36, text: "text-lg" },
-    lg: { box: 44, text: "text-2xl" },
+    sm: { box: 32, text: "text-sm" },
+    md: { box: 40, text: "text-base" },
+    lg: { box: 52, text: "text-xl" },
   }[size];
 
   const content = (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
       <Image
-        src="/favicon.png"
-        alt="FITXNET"
+        src={BRAND.images.logo}
+        alt={BRAND.name}
         width={sizes.box}
         height={sizes.box}
-        className="shrink-0"
+        className="shrink-0 rounded-full"
         priority
       />
       {showText && <BrandText className={sizes.text} />}
@@ -45,7 +46,7 @@ export function Logo({
   if (href === null) return content;
 
   return (
-    <Link href={href} className="inline-flex" aria-label="FITXNET">
+    <Link href={href} className="inline-flex" aria-label={BRAND.name}>
       {content}
     </Link>
   );

@@ -33,3 +33,25 @@ export const coachRegisterSchema = z
   });
 
 export type CoachRegisterInput = z.infer<typeof coachRegisterSchema>;
+
+/** Super admin → create a permanent coach account. */
+export const adminCreateCoachSchema = z.object({
+  name: z.string().trim().min(2, "الاسم مطلوب").max(80),
+  username: z
+    .string()
+    .trim()
+    .min(3, "اسم المستخدم 3 أحرف على الأقل")
+    .max(30)
+    .regex(usernameRegex, "أحرف إنجليزية وأرقام و _ . فقط"),
+  email: z.string().trim().email("بريد إلكتروني غير صالح").optional().or(z.literal("")),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .regex(/^[0-9+\-\s()]*$/, "رقم هاتف غير صالح")
+    .optional()
+    .or(z.literal("")),
+  password: z.string().min(8, "كلمة المرور 8 أحرف على الأقل").max(72),
+});
+
+export type AdminCreateCoachInput = z.infer<typeof adminCreateCoachSchema>;
