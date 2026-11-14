@@ -1,0 +1,49 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
+.env.local
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# one-off local dataset downloads / investigation scratch files
+# (food/exercise import scripts fetch these at runtime — never commit them)
+.usda_sr.zip
+.usda_sr_extracted/
+.usda_foundation*
+.wger_*.json
+.fedb_*.json
+.gh_search.json
+.repo_*.json
+*_log.txt
+*_dry.txt
+
+.vercel

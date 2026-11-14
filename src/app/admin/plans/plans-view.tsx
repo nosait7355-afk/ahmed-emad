@@ -1,0 +1,235 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Pencil, Trash2, Check, Users, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useI18n } from "@/components/providers/i18n-provider";
+import { formatNumber } from "@/lib/utils";
+import { PLAN_TIERS } from "@/lib/constants";
+import { createPlanAction, updatePlanAction, deletePlanAction } from "@/lib/actions/admin";
+
+export interface PlanItem {
+  id: string;
+  tier: string;
+  nameAr: string;
+  nameEn: string;
+  price: number;
+  durationMonths: number;
+  maxClients: number;
+  /** null = unlimited. */
+  maxTeamMembers: number | null;
+  featuresAr: string[];
+  featuresEn: string[];
+  branding: boolean;
+}
+
+export function PlansView({ items }: { items: PlanItem[] }) {
+  const { t, locale } = useI18n();
+  const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
+  const router = useRouter();
+  const [editing, setEditing] = useState<PlanItem | null>(null);
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function remove(id: string) {
+    if (!window.confirm(`${t.common.delete}؟`)) return;
+    startTransition(async () => { await deletePlanAction(id); router.refresh(); });
+  }
+
+  return (
+    <div>
+      <PageHeader title={t.dashboard.adminNav.plans} description={L("إدارة باقات الاشتراك.", "Manage subscription plans.")}>
+        <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" />{L("إنشاء باقة", "Create plan")}</Button>
+      </PageHeader>
+
+      {items.length === 0 ? (
+        <EmptyState icon={Users} title={t.common.emptyTitle} description={t.common.emptyDescription} />
+      ) : (
+        <div className={`grid gap-4 lg:grid-cols-3 ${isPending ? "opacity-60" : ""}`}>
+          {items.map((p) => (
+            <Card key={p.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-lg">{locale === "ar" ? p.nameAr : p.nameEn}</CardTitle>
+                  <Badge variant={p.durationMonths >= 3 ? "secondary" : "outline"}>
+                    {p.durationMonths >= 3 ? L("ربع سنوي", "Quarterly") : L("شهري", "Monthly")}
+                  </Badge>
+                </div>
+                <div className="flex items-baseline gap-1"><span className="text-3xl font-bold">{formatNumber(p.price, locale)}</span><span className="text-sm text-muted-foreground">{L("ج.م", "EGP")} / {p.durationMonths === 1 ? L("شهر", "mo") : L(`${p.durationMonths} أشهر`, `${p.durationMonths} mo`)}</span></div>
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><Users className="h-4 w-4" />{L("حتى", "Up to")} {formatNumber(p.maxClients, locale)}</p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(locale === "ar" ? p.featuresAr : p.featuresEn).map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 shrink-0 text-primary" />{f}</div>
+                ))}
+                <PlanFeaturesDisplay branding={p.branding} locale={locale} />
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditing(p); setOpen(true); }}><Pencil className="h-4 w-4" />{t.common.edit}</Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <PlanDialog open={open} onOpenChange={setOpen} editing={editing} onSaved={() => { setOpen(false); router.refresh(); }} />
+    </div>
+  );
+}
+
+function PlanDialog({
+  open,
+  onOpenChange,
+  editing,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  editing: PlanItem | null;
+  onSaved: () => void;
+}) {
+  const { t, locale } = useI18n();
+  const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
+  const [saving, setSaving] = useState(false);
+  const [f, setF] = useState(() => init(editing));
+  useEffect(() => { setF(init(editing)); }, [editing, open]);
+
+  function init(p: PlanItem | null) {
+    return {
+      tier: p?.tier ?? "starter",
+      nameAr: p?.nameAr ?? "",
+      nameEn: p?.nameEn ?? "",
+      price: p?.price?.toString() ?? "",
+      durationMonths: p?.durationMonths?.toString() ?? "1",
+      maxClients: p?.maxClients?.toString() ?? "",
+      maxTeamMembers: p?.maxTeamMembers?.toString() ?? "",
+      featuresAr: (p?.featuresAr ?? []).join("\n"),
+      featuresEn: (p?.featuresEn ?? []).join("\n"),
+      branding: p?.branding ?? false,
+    };
+  }
+  const set = (k: Exclude<keyof ReturnType<typeof init>, "branding">) => (v: string) => setF((s) => ({ ...s, [k]: v }));
+
+  async function save() {
+    setSaving(true);
+    const payload = {
+      tier: f.tier as never,
+      nameAr: f.nameAr,
+      nameEn: f.nameEn,
+      price: Number(f.price) || 0,
+      durationMonths: Number(f.durationMonths) || 1,
+      maxClients: Number(f.maxClients) || 0,
+      // Blank = unlimited; "0" is a real cap meaning no team members at all.
+      maxTeamMembers: f.maxTeamMembers.trim() === "" ? undefined : Number(f.maxTeamMembers) || 0,
+      featuresAr: f.featuresAr.split("\n").map((x) => x.trim()).filter(Boolean),
+      featuresEn: f.featuresEn.split("\n").map((x) => x.trim()).filter(Boolean),
+      branding: f.branding,
+    };
+    const res = editing ? await updatePlanAction(editing.id, payload) : await createPlanAction(payload);
+    setSaving(false);
+    if (res.ok) onSaved();
+  }
+
+  const ta = "flex min-h-[72px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{editing ? t.common.edit : L("إنشاء باقة", "Create plan")}</DialogTitle></DialogHeader>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>{L("الفئة", "Tier")}</Label>
+            <Select value={f.tier} onValueChange={set("tier")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PLAN_TIERS.map((tr) => <SelectItem key={tr} value={tr}>{tr}</SelectItem>)}</SelectContent></Select>
+          </div>
+          <div className="space-y-2"><Label>{L("السعر", "Price")}</Label><Input type="number" value={f.price} onChange={(e) => set("price")(e.target.value)} /></div>
+          <div className="space-y-2"><Label>{L("الاسم بالعربية", "Arabic name")}</Label><Input value={f.nameAr} onChange={(e) => set("nameAr")(e.target.value)} /></div>
+          <div className="space-y-2"><Label>{L("الاسم بالإنجليزية", "English name")}</Label><Input dir="ltr" value={f.nameEn} onChange={(e) => set("nameEn")(e.target.value)} /></div>
+          <div className="space-y-2"><Label>{L("المدة (شهور)", "Duration (months)")}</Label><Input type="number" min={1} value={f.durationMonths} onChange={(e) => set("durationMonths")(e.target.value)} /></div>
+          <div className="space-y-2"><Label>{L("أقصى عملاء", "Max clients")}</Label><Input type="number" value={f.maxClients} onChange={(e) => set("maxClients")(e.target.value)} /></div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>{L("أقصى أعضاء فريق", "Max team members")} <span className="text-xs text-muted-foreground">({L("اتركه فارغاً لغير محدود", "leave empty for unlimited")})</span></Label>
+            <Input type="number" min={0} value={f.maxTeamMembers} onChange={(e) => set("maxTeamMembers")(e.target.value)} />
+          </div>
+          <div className="space-y-2 sm:col-span-2"><Label>{L("المميزات (عربي — سطر لكل ميزة)", "Features AR (one per line)")}</Label><textarea className={ta} value={f.featuresAr} onChange={(e) => set("featuresAr")(e.target.value)} /></div>
+          <div className="space-y-2 sm:col-span-2"><Label>{L("المميزات (إنجليزي)", "Features EN (one per line)")}</Label><textarea className={ta} value={f.featuresEn} onChange={(e) => set("featuresEn")(e.target.value)} /></div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>{L("الميزات المتاحة", "Plan features")}</Label>
+            <div className="rounded-md border border-input p-3 space-y-2">
+              {/* Branding is the only editable flag currently; others shown as coming-soon placeholders */}
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-input"
+                  checked={f.branding}
+                  onChange={(e) => setF((s) => ({ ...s, branding: e.target.checked }))}
+                />
+                {L("هوية بصرية (White Label)", "Branding (White Label)")}
+              </label>
+              {([ ["AI Coach", "مدرب AI"], ["Custom Domain", "نطاق مخصص"], ["API Access", "الوصول للـ API"], ["PDF Branding", "تحضير PDF"], ["Advanced Analytics", "تحليلات متقدمة"] ] as [string, string][]).map(([en, ar]) => (
+                <label key={en} className="flex items-center gap-2 text-sm text-muted-foreground cursor-not-allowed select-none">
+                  <input type="checkbox" className="h-4 w-4 rounded border-input opacity-40" disabled />
+                  {L(ar, en)} <span className="text-[10px] rounded-full bg-muted px-1.5 py-0.5">{L("قريباً", "Soon")}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t.common.cancel}</Button>
+          <Button onClick={save} disabled={saving || !f.nameAr || !f.nameEn}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}{t.common.save}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const PLAN_FEATURES_META = [
+  { key: "branding", ar: "هوية بصرية", en: "Branding" },
+  { key: "aiCoach", ar: "مدرب AI", en: "AI Coach" },
+  { key: "customDomain", ar: "نطاق مخصص", en: "Custom Domain" },
+  { key: "apiAccess", ar: "وصول API", en: "API Access" },
+  { key: "pdfBranding", ar: "PDF مخصص", en: "PDF Branding" },
+  { key: "advancedAnalytics", ar: "تحليلات متقدمة", en: "Advanced Analytics" },
+] as const;
+
+function PlanFeaturesDisplay({ branding, locale }: { branding: boolean; locale: "ar" | "en" }) {
+  const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
+  return (
+    <div className="space-y-1 pt-1 border-t border-border/50">
+      {PLAN_FEATURES_META.map((f) => {
+        const active = f.key === "branding" ? branding : false;
+        return (
+          <div key={f.key} className={`flex items-center gap-2 text-xs ${active ? "text-foreground" : "text-muted-foreground"}`}>
+            {active
+              ? <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+              : <span className="h-3.5 w-3.5 shrink-0 flex items-center justify-center font-bold text-muted-foreground/50">✕</span>
+            }
+            {L(f.ar, f.en)}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

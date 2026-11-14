@@ -1,0 +1,179 @@
+import { Types } from "mongoose";
+import { connectToDatabase } from "@/lib/db";
+import { Food } from "@/models/Food";
+import { NutritionGeneration } from "@/models/NutritionGeneration";
+import { serialize } from "@/lib/serialize";
+import { DEFAULT_FOOD_MEALS, DEFAULT_FOOD_PRIORITY } from "@/lib/constants";
+import { getFoodOverrides, type FoodOverride } from "@/lib/services/foods";
+import { dietAllows, generatePlan } from "@/lib/generator/engine";
+import type { EngineFood, GeneratorInput, GeneratedPlan } from "@/lib/generator/types";
+import type { GeneratorGoal } from "@/lib/constants";
+
+export type GenScope =
+  | { role: "super_admin" }
+  | { role: "coach"; coachId: string };
+
+const HISTORY_LIMIT = 20;
+
+function visibility(scope: GenScope) {
+  if (scope.role === "coach") {
+    return {
+      $or: [
+        { isSystemFood: true },
+        { createdByCoach: new Types.ObjectId(scope.coachId) },
+      ],
+    };
+  }
+  return { isSystemFood: true };
+}
+
+/**
+ * Load the coach's visible food library as engine foods. One query, projected
+ * to just the fields the engine needs — the engine caches nothing, so we hand
+ * it a ready-to-use array (category lookups are built once inside the engine).
+ */
+export async function loadFoodPool(scope: GenScope): Promise<EngineFood[]> {
+  await connectToDatabase();
+  const docs = await Food.find(visibility(scope))
+    .select(
+      "nameAr nameEn category priority meals unit unitGrams calories protein carbs fat fiber",
+    )
+    .lean();
+
+  // Apply this coach's personal overrides on top of the base values so the
+  // generator ranks and slots foods the way the coach set them, per-account
+  // only. Priority and meals are overridden independently — a coach who only
+  // re-slotted a food keeps its stars, and vice versa.
+  const overrides =
+    scope.role === "coach"
+      ? await getFoodOverrides(scope.coachId)
+      : new Map<string, FoodOverride>();
+
+  return docs.map((f) => {
+    const o = overrides.get(String(f._id));
+    return {
+      id: String(f._id),
+      nameAr: f.nameAr,
+      nameEn: f.nameEn,
+      category: f.category,
+      priority: o?.priority ?? f.priority ?? DEFAULT_FOOD_PRIORITY,
+      // An absent/empty list means "fits every meal" — see foodFitsMeal.
+      meals: o?.meals ?? f.meals ?? [...DEFAULT_FOOD_MEALS],
+      unit: f.unit ?? "100g",
+      unitGrams: f.unitGrams ?? 100,
+      calories: f.calories ?? 0,
+      protein: f.protein ?? 0,
+      carbs: f.carbs ?? 0,
+      fat: f.fat ?? 0,
+      fiber: f.fiber ?? 0,
+    };
+  });
+}
+
+/**
+ * The candidate pool the swap engine works from: the same foods the generator
+ * could have chosen (diet filter applied, so a vegan plan never offers chicken),
+ * narrowed to the categories the plan actually uses. Sent to the client once
+ * alongside the plan so swapping is a pure client-side computation — the spec
+ * requires candidates to be pre-calculated and cached, never queried per click.
+ */
+export function swapPoolFor(
+  pool: EngineFood[],
+  goal: GeneratorGoal,
+  foodIds: Iterable<string>,
+): EngineFood[] {
+  const ids = new Set(foodIds);
+  const categories = new Set(
+    pool.filter((f) => ids.has(f.id)).map((f) => f.category),
+  );
+  return pool.filter((f) => categories.has(f.category) && dietAllows(f, goal));
+}
+
+function planFoodIds(plan: Pick<GeneratedPlan, "meals">): string[] {
+  return plan.meals.flatMap((m) => m.items.map((it) => it.food));
+}
+
+/**
+ * Load the swap candidate pool for an existing plan — used when a coach reopens
+ * a plan from history, where no pool was shipped with it.
+ */
+export async function loadSwapPool(
+  scope: GenScope,
+  goal: GeneratorGoal,
+  foodIds: string[],
+): Promise<EngineFood[]> {
+  return swapPoolFor(await loadFoodPool(scope), goal, foodIds);
+}
+
+/**
+ * Generate a plan and persist it to the coach's history (last 20 kept). Throws
+ * GeneratorError on empty library / missing categories — the action layer maps
+ * those to a friendly message.
+ */
+export async function generateAndRecord(
+  scope: GenScope,
+  input: GeneratorInput,
+): Promise<{ plan: GeneratedPlan; historyId: string | null; swapPool: EngineFood[] }> {
+  const pool = await loadFoodPool(scope);
+  const plan = generatePlan(pool, input);
+  const swapPool = swapPoolFor(pool, input.goal, planFoodIds(plan));
+
+  let historyId: string | null = null;
+  if (scope.role === "coach") {
+    const coach = new Types.ObjectId(scope.coachId);
+    const doc = await NutritionGeneration.create({
+      coach,
+      calories: input.calories,
+      goal: input.goal,
+      mealsPerDay: input.mealsPerDay,
+      ratio: plan.ratio,
+      seed: input.seed ?? 0,
+      meals: plan.meals,
+      summary: {
+        calories: plan.totals.calories,
+        protein: plan.totals.protein,
+        carbs: plan.totals.carbs,
+        fat: plan.totals.fat,
+      },
+      withinTolerance: plan.withinTolerance,
+    });
+    historyId = doc._id.toString();
+
+    // Prune to the most recent HISTORY_LIMIT for this coach.
+    const stale = await NutritionGeneration.find({ coach })
+      .sort({ createdAt: -1 })
+      .skip(HISTORY_LIMIT)
+      .select("_id")
+      .lean();
+    if (stale.length) {
+      await NutritionGeneration.deleteMany({
+        _id: { $in: stale.map((d) => d._id) },
+      });
+    }
+  }
+
+  return { plan, historyId, swapPool };
+}
+
+export async function listGenerations(scope: GenScope) {
+  if (scope.role !== "coach") return [];
+  await connectToDatabase();
+  const docs = await NutritionGeneration.find({
+    coach: new Types.ObjectId(scope.coachId),
+  })
+    .sort({ createdAt: -1 })
+    .limit(HISTORY_LIMIT)
+    .lean();
+  return serialize(docs);
+}
+
+export async function getGeneration(id: string, scope: GenScope) {
+  if (scope.role !== "coach") return null;
+  await connectToDatabase();
+  if (!Types.ObjectId.isValid(id)) return null;
+  const doc = await NutritionGeneration.findOne({
+    _id: id,
+    coach: new Types.ObjectId(scope.coachId),
+  }).lean();
+  return doc ? serialize(doc) : null;
+}
