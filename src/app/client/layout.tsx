@@ -28,7 +28,7 @@ export default async function ClientLayout({
   // instead of the app, on every /client route.
   const signup = await getSignupState(session.user.id);
   if (signup?.pending) {
-    return <PendingActivation name={signup.name} username={signup.username} pkg={signup.package} />;
+    return <PendingActivation name={signup.name} phone={signup.phone} pkg={signup.package} />;
   }
 
   const [raw, unread, hasAccess] = await Promise.all([

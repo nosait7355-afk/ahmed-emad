@@ -1,18 +1,10 @@
 import { z } from "zod";
 import { CLIENT_GOALS, GENDERS } from "@/lib/constants";
 
-const usernameRegex = /^[a-zA-Z0-9_.]+$/;
-
 /** Public sign-up form (client picks a package and creates their account). */
 export const clientRegisterSchema = z
   .object({
     name: z.string().trim().min(2, "الاسم مطلوب").max(80),
-    username: z
-      .string()
-      .trim()
-      .min(3, "اسم المستخدم 3 أحرف على الأقل")
-      .max(30)
-      .regex(usernameRegex, "أحرف إنجليزية وأرقام و _ . فقط"),
     email: z.string().trim().email("بريد إلكتروني غير صالح").optional().or(z.literal("")),
     phone: z
       .string()

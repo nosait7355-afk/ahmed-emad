@@ -23,11 +23,11 @@ import { formatNumber } from "@/lib/utils";
  */
 export function PendingActivation({
   name,
-  username,
+  phone,
   pkg,
 }: {
   name: string;
-  username: string;
+  phone: string;
   pkg: { name: { ar: string; en: string }; price: number; months: number } | null;
 }) {
   const { locale } = useI18n();
@@ -48,12 +48,12 @@ export function PendingActivation({
 
   const message = pkg
     ? L(
-        `مرحبا كابتن، أنا ${name} سجلت على الموقع (اسم المستخدم: ${username}) واخترت باقة «${pkg.name.ar}» بسعر ${pkg.price} ج.م. دي صورة التحويل.`,
-        `Hi coach, I'm ${name}. I signed up on the site (username: ${username}) and chose the "${pkg.name.en || pkg.name.ar}" plan for ${pkg.price} EGP. Here is my transfer screenshot.`,
+        `مرحبا كابتن، أنا ${name} سجلت على الموقع (رقم الموبايل: ${phone}) واخترت باقة «${pkg.name.ar}» بسعر ${pkg.price} ج.م. دي صورة التحويل.`,
+        `Hi coach, I'm ${name}. I signed up on the site (phone: ${phone}) and chose the "${pkg.name.en || pkg.name.ar}" plan for ${pkg.price} EGP. Here is my transfer screenshot.`,
       )
     : L(
-        `مرحبا كابتن، أنا ${name} سجلت على الموقع (اسم المستخدم: ${username}) وعايز أفعّل اشتراكي.`,
-        `Hi coach, I'm ${name}. I signed up on the site (username: ${username}) and would like to activate my subscription.`,
+        `مرحبا كابتن، أنا ${name} سجلت على الموقع (رقم الموبايل: ${phone}) وعايز أفعّل اشتراكي.`,
+        `Hi coach, I'm ${name}. I signed up on the site (phone: ${phone}) and would like to activate my subscription.`,
       );
   const wa = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(message)}`;
 

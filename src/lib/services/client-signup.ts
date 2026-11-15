@@ -6,6 +6,8 @@ import { hashPassword } from "@/lib/auth/password";
 import { nextClientCode } from "@/lib/codes";
 import { serialize } from "@/lib/serialize";
 import { createNotification } from "./notifications";
+import { findClientsByPhone, generateUsername } from "./clients";
+import { normalizePhone } from "@/lib/phone";
 import { getPrimaryCoachId } from "./coach-account";
 import { ensureDefaultPackages, getActivePackage } from "./coaching-packages";
 import type { ClientGoal, Gender } from "@/lib/constants";
@@ -21,7 +23,7 @@ import type { ClientGoal, Gender } from "@/lib/constants";
 
 export class ClientSignupError extends Error {
   constructor(
-    public code: "SIGNUP_CLOSED" | "USERNAME_TAKEN" | "EMAIL_TAKEN" | "PACKAGE_UNAVAILABLE" | "NOT_FOUND",
+    public code: "SIGNUP_CLOSED" | "PHONE_TAKEN" | "EMAIL_TAKEN" | "PACKAGE_UNAVAILABLE" | "NOT_FOUND",
     message: string,
   ) {
     super(message);
@@ -31,8 +33,8 @@ export class ClientSignupError extends Error {
 
 export interface ClientSignupInput {
   name: string;
-  username: string;
   email?: string;
+  /** Also the client's sign-in identifier. */
   phone: string;
   password: string;
   gender: Gender;
@@ -55,10 +57,10 @@ export async function registerClientAccount(input: ClientSignupInput): Promise<{
     throw new ClientSignupError("PACKAGE_UNAVAILABLE", "الباقة المختارة غير متاحة. اختار باقة تانية.");
   }
 
-  const username = input.username.toLowerCase().trim();
+  const phone = normalizePhone(input.phone);
   const email = input.email?.toLowerCase().trim() || undefined;
-  if (await User.exists({ username })) {
-    throw new ClientSignupError("USERNAME_TAKEN", "اسم المستخدم مستخدم بالفعل");
+  if ((await findClientsByPhone(phone)).length > 0) {
+    throw new ClientSignupError("PHONE_TAKEN", "رقم الموبايل مسجل بالفعل. سجّل دخولك بيه.");
   }
   if (email && (await User.exists({ email }))) {
     throw new ClientSignupError("EMAIL_TAKEN", "البريد الإلكتروني مستخدم بالفعل");
@@ -66,9 +68,10 @@ export async function registerClientAccount(input: ClientSignupInput): Promise<{
 
   const client = await User.create({
     name: input.name.trim(),
-    username,
+    // Internal only: clients sign in with their phone number.
+    username: await generateUsername(),
     email,
-    phone: input.phone.trim(),
+    phone,
     passwordHash: await hashPassword(input.password),
     role: "client",
     status: "active",
@@ -109,7 +112,7 @@ export async function registerClientAccount(input: ClientSignupInput): Promise<{
 
 export interface SignupState {
   pending: boolean;
-  username: string;
+  phone: string;
   name: string;
   package: { name: { ar: string; en: string }; price: number; months: number } | null;
 }
@@ -119,13 +122,13 @@ export async function getSignupState(clientId: string): Promise<SignupState | nu
   await connectToDatabase();
   if (!Types.ObjectId.isValid(clientId)) return null;
   const client = await User.findOne({ _id: clientId, role: "client" })
-    .select("name username clientProfile.signupStatus clientProfile.requestedPackage")
+    .select("name phone clientProfile.signupStatus clientProfile.requestedPackage")
     .lean();
   if (!client) return null;
   const pkg = client.clientProfile?.requestedPackage;
   return {
     pending: client.clientProfile?.signupStatus === "pending",
-    username: client.username,
+    phone: client.phone ?? "",
     name: client.name,
     package: pkg
       ? { name: { ar: pkg.name?.ar ?? "", en: pkg.name?.en ?? "" }, price: pkg.price, months: pkg.months }

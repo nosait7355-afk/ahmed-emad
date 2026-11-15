@@ -1,3 +1,4 @@
+import { PhoneTakenError, normalizePhone, phoneTail, phoneTailRegex } from "@/lib/phone";
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
@@ -22,6 +23,8 @@ import type {
 
 export interface GeneratedCredentials {
   username: string;
+  /** What the client signs in with. */
+  phone: string;
   password: string;
   code: string;
 }
@@ -94,7 +97,7 @@ export async function getClient(coachId: string, clientId: string) {
  * Generates a random, code-free username (not derived from the client code),
  * retrying on the rare collision since usernames must be unique.
  */
-async function generateUsername(): Promise<string> {
+export async function generateUsername(): Promise<string> {
   for (let i = 0; i < 5; i++) {
     const candidate = `m${secureRandomString(7).toLowerCase()}`;
     if (!(await User.exists({ username: candidate }))) return candidate;
@@ -102,10 +105,24 @@ async function generateUsername(): Promise<string> {
   throw new Error("Could not generate a unique username");
 }
 
+/** Clients whose stored phone ends with the same tail as the given number. */
+export async function findClientsByPhone(phone: string) {
+  const tail = phoneTail(phone);
+  if (!tail) return [];
+  return User.find({ role: "client", phone: phoneTailRegex(tail) }).limit(5);
+}
+
+/** Throws PhoneTakenError when another client already uses this number. */
+export async function assertClientPhoneFree(phone: string, exceptClientId?: string) {
+  const matches = await findClientsByPhone(phone);
+  if (matches.some((m) => m._id.toString() !== exceptClientId)) throw new PhoneTakenError();
+}
+
 /**
  * Create a client under a coach. The client code (TRG00001) is kept only as
  * an internal reference shown to the coach — it is never used as the
- * username or password.
+ * username or password. The client signs in with their phone number; the
+ * generated username is internal only.
  */
 export async function createClient(
   coachId: string,
@@ -113,6 +130,8 @@ export async function createClient(
 ): Promise<{ clientId: string; credentials: GeneratedCredentials }> {
   await connectToDatabase();
   await assertClientLimit(coachId);
+  const phone = normalizePhone(input.phone);
+  await assertClientPhoneFree(phone);
 
   const code = await nextClientCode(); // TRG00001 — internal reference only
   const username = await generateUsername();
@@ -126,7 +145,7 @@ export async function createClient(
     name: input.name,
     username,
     email: input.email || undefined,
-    phone: input.phone,
+    phone,
     passwordHash: await hashPassword(password),
     role: "client",
     status: "active",
@@ -157,7 +176,7 @@ export async function createClient(
 
   return {
     clientId: client._id.toString(),
-    credentials: { username, password, code },
+    credentials: { username, phone, password, code },
   };
 }
 
@@ -170,7 +189,11 @@ export async function updateClient(
   await connectToDatabase();
   const set: Record<string, unknown> = {};
   if (input.name !== undefined) set.name = input.name;
-  if (input.phone !== undefined) set.phone = input.phone;
+  if (input.phone !== undefined) {
+    const phone = normalizePhone(input.phone);
+    await assertClientPhoneFree(phone, clientId);
+    set.phone = phone;
+  }
   if (input.email !== undefined) set.email = input.email || undefined;
   if (input.age !== undefined) set["clientProfile.age"] = input.age;
   if (input.gender !== undefined) set["clientProfile.gender"] = input.gender;

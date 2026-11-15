@@ -6,6 +6,8 @@ import { User } from "@/models/User";
 import { comparePassword } from "./password";
 import { accountCanLogin } from "@/lib/permissions";
 import { loginSchema } from "@/lib/validations/auth";
+import { looksLikePhone } from "@/lib/phone";
+import { findClientsByPhone } from "@/lib/services/clients";
 import { syncCoachStatus } from "@/lib/services/subscription";
 import { logError } from "@/lib/logging/error-log";
 import {
@@ -36,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        identifier: { label: "Username or Email", type: "text" },
+        identifier: { label: "Phone, username or email", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(raw) {
@@ -66,13 +68,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         try {
           await connectToDatabase();
-          const user = await User.findOne({
+          let user = await User.findOne({
             $or: [{ username: id }, { email: id }],
           });
-          if (!user) return fail();
+          if (user && !(await comparePassword(password, user.passwordHash))) user = null;
 
-          const ok = await comparePassword(password, user.passwordHash);
-          if (!ok) return fail();
+          // Clients sign in with the phone number they were registered with.
+          if (!user && looksLikePhone(identifier)) {
+            for (const candidate of await findClientsByPhone(identifier)) {
+              if (await comparePassword(password, candidate.passwordHash)) {
+                user = candidate;
+                break;
+              }
+            }
+          }
+          if (!user) return fail();
 
           // Password was right — don't hold a lockout over a legitimate user.
           resetRateLimit(RATE_LIMITS.loginIp, ipKey);

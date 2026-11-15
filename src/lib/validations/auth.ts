@@ -3,7 +3,7 @@ import { z } from "zod";
 const usernameRegex = /^[a-zA-Z0-9_.]+$/;
 
 export const loginSchema = z.object({
-  identifier: z.string().min(3, "أدخل اسم المستخدم أو البريد الإلكتروني"),
+  identifier: z.string().min(3, "أدخل رقم الموبايل أو اسم المستخدم"),
   password: z.string().min(1, "أدخل كلمة المرور"),
 });
 

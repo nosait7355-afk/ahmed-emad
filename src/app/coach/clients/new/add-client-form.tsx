@@ -72,13 +72,15 @@ export function AddClientForm() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [creds, setCreds] = useState<null | { username: string; password: string; code: string }>(null);
+  const [creds, setCreds] = useState<null | { username: string; phone: string; password: string; code: string }>(null);
   const [copied, setCopied] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
 
   const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const dialCode = COUNTRIES.find((c) => c.value === form.country)?.dialCode ?? "+20";
   const fullPhone = `${dialCode}${form.phone}`;
+  // What the client types on the login screen: the local number as entered.
+  const loginPhone = form.phone.replace(/[^0-9]/g, "");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,7 +107,9 @@ export function AddClientForm() {
       setError(
         res.code === "COACH_READ_ONLY"
           ? t.account.trialExpiredDesc
-          : t.common.errorDescription,
+          : res.code === "PHONE_TAKEN"
+            ? L("رقم الموبايل ده مسجل لعميل تاني.", "This phone number already belongs to another client.")
+            : t.common.errorDescription,
       );
       return;
     }
@@ -114,7 +118,7 @@ export function AddClientForm() {
 
   function copyAll() {
     if (!creds) return;
-    const text = `${academyName}\n${L("اسم المستخدم", "Username")}: ${creds.username}\n${L("كلمة المرور", "Password")}: ${creds.password}`;
+    const text = `${academyName}\n${L("رقم الموبايل (للدخول)", "Phone (login)")}: ${loginPhone}\n${L("كلمة المرور", "Password")}: ${creds.password}`;
     navigator.clipboard?.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -124,8 +128,8 @@ export function AddClientForm() {
     if (!creds) return "#";
     const loginUrl = appUrl("/login");
     const message = L(
-      `مرحباً ${form.name}،\nتم إنشاء حسابك في ${academyName}.\nاسم المستخدم: ${creds.username}\nكلمة المرور: ${creds.password}\nرابط تسجيل الدخول: ${loginUrl}`,
-      `Hi ${form.name},\nYour ${academyName} account is ready.\nUsername: ${creds.username}\nPassword: ${creds.password}\nLogin link: ${loginUrl}`,
+      `مرحباً ${form.name}،\nتم إنشاء حسابك في ${academyName}.\nسجّل دخولك برقم موبايلك: ${loginPhone}\nكلمة المرور: ${creds.password}\nرابط تسجيل الدخول: ${loginUrl}`,
+      `Hi ${form.name},\nYour ${academyName} account is ready.\nSign in with your phone number: ${loginPhone}\nPassword: ${creds.password}\nLogin link: ${loginUrl}`,
     );
     const digits = fullPhone.replace(/[^\d]/g, "");
     return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
@@ -167,7 +171,7 @@ export function AddClientForm() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { k: L("اسم المستخدم", "Username"), v: creds.username },
+              { k: L("رقم الموبايل (للدخول)", "Phone (login)"), v: loginPhone },
               { k: L("كلمة المرور المؤقتة", "Temporary password"), v: creds.password },
               { k: L("كود العميل", "Client code"), v: creds.code },
             ].map((row) => (
@@ -201,7 +205,7 @@ export function AddClientForm() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title={t.dashboard.coachNav.addClient}
-        description={L("سيُنشئ النظام اسم مستخدم وكلمة مرور تلقائياً.", "The system auto-generates a username and password.")}
+        description={L("العميل هيسجّل دخوله برقم موبايله، والنظام هيعمل كلمة المرور تلقائياً.", "The client signs in with their phone number; the system generates the password.")}
       />
       <Card>
         <CardContent className="p-6">

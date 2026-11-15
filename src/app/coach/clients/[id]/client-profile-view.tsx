@@ -297,7 +297,7 @@ export function ClientProfileView({
             <div>
               <h2 className="text-xl font-bold">{client.name}</h2>
               <p className="text-sm text-muted-foreground" dir="ltr">
-                {client.code} · @{client.username}
+                {client.code} · {client.phone}
               </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 {client.goal && <Badge variant="secondary">{label(GOAL_LABELS, client.goal, locale)}</Badge>}

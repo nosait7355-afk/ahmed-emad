@@ -20,7 +20,8 @@ const coachSvc = await import("@/lib/services/coach-account");
 const pkgSvc = await import("@/lib/services/coaching-packages");
 const signup = await import("@/lib/services/client-signup");
 const { getClientAccessState } = await import("@/lib/services/subscription");
-const { listClients, coachClientStats, deleteClient } = await import("@/lib/services/clients");
+const { listClients, coachClientStats, deleteClient, createClient, updateClient, findClientsByPhone } = await import("@/lib/services/clients");
+const { normalizePhone, phoneTail, looksLikePhone } = await import("@/lib/phone");
 const { clientRegisterSchema, packageSchema } = await import("@/lib/validations/client-signup");
 
 let failed = 0;
@@ -39,7 +40,6 @@ async function codeOf(fn: () => Promise<unknown>): Promise<string> {
 
 const base = {
   name: "Mona Ali",
-  username: "Mona",
   phone: "+201012345678",
   password: "Passw0rd!",
   gender: "female" as const,
@@ -119,7 +119,18 @@ try {
   const { clientId } = await signup.registerClientAccount({ ...base, email: "Mona@X.com", packageId: p3.id });
   const doc = await User.findById(clientId).lean();
   check("client is attached to the primary coach", String(doc?.clientProfile?.coach) === coachId);
-  check("username and email are normalized", doc?.username === "mona" && doc?.email === "mona@x.com");
+  check("email is normalized and a username is generated", !!doc?.username && doc?.email === "mona@x.com");
+
+  // ---- Phone is the client's sign-in identifier ----
+  check("phone is stored normalized", doc?.phone === "+201012345678");
+  const byPhone = async (typed: string) => (await findClientsByPhone(typed)).map((u) => String(u._id));
+  check("local form finds the client", (await byPhone("01012345678")).includes(clientId));
+  check("international form finds the client", (await byPhone("+20 101 234 5678")).includes(clientId));
+  check("00 prefix form finds the client", (await byPhone("00201012345678")).includes(clientId));
+  check("a different number finds nobody", (await byPhone("01099999999")).length === 0);
+  check("too-short input finds nobody", (await byPhone("123")).length === 0);
+  check("phone lookup never returns non-clients", !(await byPhone("01012345678")).includes(coachId));
+  check("helpers", normalizePhone(" +20 (101) 234-5678 ") === "+201012345678" && phoneTail("0101") === null && looksLikePhone("01012345678") && !looksLikePhone("mona.ali"));
   check("client starts pending", doc?.clientProfile?.signupStatus === "pending");
   check("client gets a client code", /^TRG\d{5}$/.test(doc?.clientProfile?.clientCode ?? ""));
   check(
@@ -130,12 +141,25 @@ try {
   check("password is hashed", !!doc?.passwordHash && doc.passwordHash !== base.password);
 
   check(
-    "duplicate username rejected",
-    (await codeOf(() => signup.registerClientAccount({ ...base, username: "MONA", packageId: p3.id }))) === "USERNAME_TAKEN",
+    "duplicate phone rejected on sign-up (any form)",
+    (await codeOf(() => signup.registerClientAccount({ ...base, phone: "01012345678", packageId: p3.id }))) === "PHONE_TAKEN",
   );
   check(
+    "coach cannot add a client with a taken phone",
+    (await codeOf(() => createClient(coachId, { name: "Dup", phone: "+2001012345678" }))) === "PHONE_TAKEN",
+  );
+  const added = await createClient(coachId, { name: "Hany", phone: "+20 0111 222 3333" });
+  check("coach-created client returns the login phone", added.credentials.phone === "+2001112223333");
+  check("coach-created client is found by the local number", (await byPhone("01112223333")).includes(added.clientId));
+  check(
+    "editing a client onto a taken phone is rejected",
+    (await codeOf(() => updateClient(coachId, added.clientId, { phone: "01012345678" }))) === "PHONE_TAKEN",
+  );
+  check("re-saving a client's own phone is allowed", await updateClient(coachId, added.clientId, { phone: "+2001112223333" }));
+  await deleteClient(coachId, added.clientId);
+  check(
     "duplicate email rejected",
-    (await codeOf(() => signup.registerClientAccount({ ...base, username: "mona2", email: "mona@x.com", packageId: p3.id }))) === "EMAIL_TAKEN",
+    (await codeOf(() => signup.registerClientAccount({ ...base, phone: "+201055555555", email: "mona@x.com", packageId: p3.id }))) === "EMAIL_TAKEN",
   );
 
   check("pending client is locked out", (await getClientAccessState(clientId)).frozen === true);
@@ -174,14 +198,14 @@ try {
   check("activating twice is rejected", (await codeOf(() => signup.activateSignup(coachId, clientId))) === "NOT_FOUND");
 
   // Activate a second client on a different package than requested.
-  const second = await signup.registerClientAccount({ ...base, username: "omar", gender: "male", packageId: p3.id });
+  const second = await signup.registerClientAccount({ ...base, phone: "+201066666666", gender: "male", packageId: p3.id });
   const twoMonth = await signup.activateSignup(coachId, second.clientId, { packageId: newId });
   const m2 = (twoMonth.endDate.getFullYear() - new Date().getFullYear()) * 12 + twoMonth.endDate.getMonth() - new Date().getMonth();
   const secondDoc = await User.findById(second.clientId).lean();
   check("coach can activate on a different package (2 months)", m2 === 2 && secondDoc?.clientProfile?.requestedPackage?.price === 900);
 
   // Decline = delete the pending account.
-  const third = await signup.registerClientAccount({ ...base, username: "sara", packageId: p3.id });
+  const third = await signup.registerClientAccount({ ...base, phone: "+201077777777", packageId: p3.id });
   check("declining removes the pending account", (await deleteClient(coachId, third.clientId)) && !(await User.exists({ _id: third.clientId })));
 
   // ---- Validation ----

@@ -14,7 +14,7 @@ export type RegisterResult =
   | {
       ok: false;
       error:
-        | "USERNAME_TAKEN"
+        | "PHONE_TAKEN"
         | "EMAIL_TAKEN"
         | "VALIDATION"
         | "SERVER"
@@ -48,7 +48,6 @@ export async function registerClient(input: ClientRegisterInput): Promise<Regist
   try {
     const { clientId } = await registerClientAccount({
       name: data.name,
-      username: data.username,
       email: data.email || undefined,
       phone: data.phone,
       password: data.password,
@@ -66,13 +65,14 @@ export async function registerClient(input: ClientRegisterInput): Promise<Regist
     }
   } catch (e: unknown) {
     if (e instanceof ClientSignupError) {
-      const field = e.code === "USERNAME_TAKEN" ? "username" : e.code === "EMAIL_TAKEN" ? "email" : undefined;
+      const field = e.code === "PHONE_TAKEN" ? "phone" : e.code === "EMAIL_TAKEN" ? "email" : undefined;
       return { ok: false, error: e.code === "NOT_FOUND" ? "SERVER" : e.code, field, message: e.message };
     }
     const err = e as { code?: number; keyPattern?: Record<string, unknown> };
     if (err?.code === 11000) {
       const field = Object.keys(err.keyPattern ?? {})[0];
-      return { ok: false, error: field === "email" ? "EMAIL_TAKEN" : "USERNAME_TAKEN", field };
+      // A non-email duplicate can only be the generated internal username: retryable server error.
+      return field === "email" ? { ok: false, error: "EMAIL_TAKEN", field } : { ok: false, error: "SERVER" };
     }
     const error = e instanceof Error ? e : new Error(String(e));
     await logError({

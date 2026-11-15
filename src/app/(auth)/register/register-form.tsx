@@ -57,7 +57,6 @@ export function RegisterForm({
     resolver: zodResolver(clientRegisterSchema),
     defaultValues: {
       name: "",
-      username: "",
       email: "",
       phone: "",
       password: "",
@@ -83,8 +82,8 @@ export function RegisterForm({
     const res = await registerClient(values);
 
     if (!res.ok) {
-      if (res.error === "USERNAME_TAKEN") {
-        setError("username", { message: t.auth.usernameTaken });
+      if (res.error === "PHONE_TAKEN") {
+        setError("phone", { message: res.message ?? L("رقم الموبايل مسجل بالفعل.", "This phone number is already registered.") });
       } else if (res.error === "EMAIL_TAKEN") {
         setError("email", { message: t.auth.emailTaken });
       } else if (res.error === "RATE_LIMITED") {
@@ -103,7 +102,7 @@ export function RegisterForm({
     // Sign in straight away; the client area shows the payment / waiting screen.
     const signInRes = await signIn("credentials", {
       redirect: false,
-      identifier: values.username,
+      identifier: values.phone,
       password: values.password,
     });
     if (!signInRes || signInRes.error) {
@@ -282,11 +281,9 @@ export function RegisterForm({
           <fieldset className={SECTION}>
             <Legend n={L("٣", "3")}>{L("بيانات الدخول", "Sign-in details")}</Legend>
 
-            <div className="space-y-2">
-              <Label htmlFor="username">{t.common.username}</Label>
-              <Input id="username" dir="ltr" autoComplete="username" autoCapitalize="none" {...register("username")} />
-              {err("username")}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              {L("هتسجّل دخولك برقم الموبايل اللي كتبته فوق وكلمة المرور دي.", "You'll sign in with the mobile number above and this password.")}
+            </p>
 
             <div className="space-y-2">
               <Label htmlFor="email">

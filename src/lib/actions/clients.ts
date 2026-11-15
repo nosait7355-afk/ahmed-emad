@@ -13,6 +13,7 @@ import {
   type ClientUpdateInput,
 } from "@/lib/validations/client";
 import * as clients from "@/lib/services/clients";
+import { PhoneTakenError } from "@/lib/phone";
 import type { GeneratedCredentials } from "@/lib/services/clients";
 
 export async function createClientAction(
@@ -22,7 +23,13 @@ export async function createClientAction(
     const parsed = clientCreateSchema.safeParse(input);
     if (!parsed.success) return fail("بيانات غير صالحة", "VALIDATION");
     const { coachId } = await getCoachAreaWriteCtxFor(canManageClients);
-    const res = await clients.createClient(coachId, parsed.data);
+    let res;
+    try {
+      res = await clients.createClient(coachId, parsed.data);
+    } catch (e) {
+      if (e instanceof PhoneTakenError) return fail(e.message, e.code);
+      throw e;
+    }
     revalidatePath("/coach/clients");
     revalidatePath("/coach");
     return ok(res);
@@ -37,7 +44,13 @@ export async function updateClientAction(
     const parsed = clientUpdateSchema.safeParse(input);
     if (!parsed.success) return fail("بيانات غير صالحة", "VALIDATION");
     const { coachId } = await getCoachAreaWriteCtxFor(canManageClients);
-    const okUpdate = await clients.updateClient(coachId, clientId, parsed.data);
+    let okUpdate;
+    try {
+      okUpdate = await clients.updateClient(coachId, clientId, parsed.data);
+    } catch (e) {
+      if (e instanceof PhoneTakenError) return fail(e.message, e.code);
+      throw e;
+    }
     if (!okUpdate) return fail("غير موجود", "NOT_FOUND");
     revalidatePath("/coach/clients");
     revalidatePath(`/coach/clients/${clientId}`);

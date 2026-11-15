@@ -77,7 +77,7 @@ export function ProfileView({ self, stats }: { self: ClientSelf; stats: ClientPe
           <Avatar className="h-20 w-20"><AvatarFallback className="bg-primary/10 text-2xl text-primary">{self.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</AvatarFallback></Avatar>
           <div className="flex-1">
             <h2 className="text-xl font-bold">{self.name}</h2>
-            <p className="text-sm text-muted-foreground" dir="ltr">{self.code} · @{self.username}</p>
+            <p className="text-sm text-muted-foreground" dir="ltr">{self.code}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
               {self.goal && <Badge variant="secondary">{label(GOAL_LABELS, self.goal, locale)}</Badge>}
               <Badge variant="outline">{L("المدرب:", "Coach:")} {self.coachName}</Badge>

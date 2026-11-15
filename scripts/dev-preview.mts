@@ -68,7 +68,6 @@ async function main() {
   const [firstPackage] = await listPackages(coachId, { activeOnly: true });
   await registerClientAccount({
     name: "Youssef Adel",
-    username: "pending",
     phone: "+201001234567",
     password: "Client123!",
     gender: "male",

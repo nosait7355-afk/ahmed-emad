@@ -130,7 +130,7 @@ export function RequestsView({
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-semibold">{r.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        <span dir="ltr">@{r.username}</span> · {formatFullDateTime(r.requestedAt, locale)}
+                        {formatFullDateTime(r.requestedAt, locale)}
                       </div>
                     </div>
                     {r.package && (
