@@ -65,23 +65,23 @@ export function PlansResetView({ stats }: { stats: ResetPlansStats }) {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="flex items-start gap-2 rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {L("هذا الإجراء لا يمكن التراجع عنه.", "This action cannot be undone.")}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <Package className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
               <div className="text-2xl font-bold">{formatNumber(stats.plansCount, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("عدد الباقات الحالية", "Current plans")}</div>
             </div>
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <Wallet className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
               <div className="text-2xl font-bold">{formatNumber(stats.totalRevenue, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("إجمالي الإيرادات الحالية", "Current total revenue")}</div>
             </div>
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <Users className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
               <div className="text-2xl font-bold">{formatNumber(stats.coachesLinked, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("عدد المدربين المرتبطين بالباقات", "Coaches linked to plans")}</div>
@@ -89,7 +89,7 @@ export function PlansResetView({ stats }: { stats: ResetPlansStats }) {
           </div>
 
           {result && (
-            <div className="flex flex-col gap-1 rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+            <div className="flex flex-col gap-1 rounded-2xl border border-success/25 bg-success/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
               <div className="flex items-center gap-2 font-medium">
                 <CheckCircle2 className="h-4 w-4" />
                 {L("تم إعادة إنشاء الباقات بنجاح", "Plans were reset successfully")}

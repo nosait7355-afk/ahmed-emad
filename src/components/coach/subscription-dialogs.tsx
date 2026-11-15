@@ -95,7 +95,7 @@ export function FreezeDialog({
               maxLength={1000}
               rows={3}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full resize-none rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-sm outline-none hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

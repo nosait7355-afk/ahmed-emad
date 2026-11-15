@@ -57,15 +57,11 @@ export function BrandProvider({
     root.style.setProperty("--primary-brand", initialBrand.primaryColor);
     root.style.setProperty("--secondary-brand", initialBrand.secondaryColor);
     root.style.setProperty("--button", initialBrand.buttonColor);
-    root.style.setProperty("--header", initialBrand.headerColor);
-    root.style.setProperty("--sidebar", initialBrand.sidebarColor);
     root.style.setProperty("--link", initialBrand.linkColor);
     return () => {
       root.style.removeProperty("--primary-brand");
       root.style.removeProperty("--secondary-brand");
       root.style.removeProperty("--button");
-      root.style.removeProperty("--header");
-      root.style.removeProperty("--sidebar");
       root.style.removeProperty("--link");
     };
   }, [initialBrand]);

@@ -26,10 +26,10 @@ export function StatCard({
 
   return (
     <Card>
-      <CardContent className="flex items-start justify-between gap-3 p-5">
+      <CardContent className="flex items-start justify-between gap-3 p-5 sm:p-6">
         <div className="min-w-0 space-y-1.5">
           <p className="truncate text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-3xl font-bold tracking-tight tabular-nums">{value}</p>
           {delta ? (
             <p
               className={cn(
@@ -53,7 +53,7 @@ export function StatCard({
         </div>
         <div
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
             accentClasses,
           )}
         >

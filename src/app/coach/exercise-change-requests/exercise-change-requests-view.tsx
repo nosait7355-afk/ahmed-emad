@@ -326,7 +326,7 @@ function ApproveDialog({ row, onClose }: { row: RequestRow | null; onClose: () =
             maxLength={500}
             onChange={(e) => setCoachNote(e.target.value)}
             rows={2}
-            className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full resize-none rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-sm outline-none hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
@@ -399,7 +399,7 @@ function ExercisePickerInline({
               type="button"
               onClick={() => onPick(ex)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-md border px-3 py-2 text-start transition-colors hover:bg-accent",
+                "flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-colors hover:bg-accent",
                 picked?.id === ex.id && "border-primary bg-primary/5",
               )}
             >
@@ -471,7 +471,7 @@ function RejectDialog({ row, onClose }: { row: RequestRow | null; onClose: () =>
             maxLength={500}
             onChange={(e) => setCoachNote(e.target.value)}
             rows={3}
-            className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full resize-none rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-sm outline-none hover:bg-muted focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
         <DialogFooter>

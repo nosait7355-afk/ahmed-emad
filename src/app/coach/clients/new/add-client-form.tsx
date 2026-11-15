@@ -171,7 +171,7 @@ export function AddClientForm() {
               { k: L("كلمة المرور المؤقتة", "Temporary password"), v: creds.password },
               { k: L("كود العميل", "Client code"), v: creds.code },
             ].map((row) => (
-              <div key={row.k} className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+              <div key={row.k} className="flex items-center justify-between rounded-2xl bg-muted/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">{row.k}</span>
                 <code className="font-mono text-sm font-semibold" dir="ltr">{row.v}</code>
               </div>

@@ -67,7 +67,7 @@ export function DashboardShell({
   featureFlags?: { branding?: boolean; teamCtx?: TeamPermissionContext };
   children: React.ReactNode;
 }) {
-  const { t, dir, locale } = useI18n();
+  const { t, dir } = useI18n();
   const brand = useBrand();
   const [mobileOpen, setMobileOpen] = useState(false);
   const sections = getNavForRole(role, t, featureFlags);
@@ -75,28 +75,20 @@ export function DashboardShell({
   const showReadOnly = (role === "coach" || role === "team_member") && coachIsReadOnly(status);
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
-      {/* Desktop sidebar */}
-      <aside
-        className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-e bg-[var(--sidebar)] lg:flex"
-        style={{ colorScheme: "dark" }}
-      >
-        <div className="flex h-16 items-center border-b border-white/10 px-5">
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar — uses the design tokens, not per-coach colors. */}
+      <aside className="sticky top-0 hidden h-screen w-[17rem] shrink-0 flex-col border-e border-border/60 bg-card/60 backdrop-blur-xl lg:flex">
+        <div className="flex h-16 items-center px-5">
           <BrandLogo />
         </div>
-        <div className="flex-1 overflow-y-auto scrollbar-thin py-3">
+        <div className="flex-1 overflow-y-auto scrollbar-thin py-2">
           <SidebarNav sections={sections} />
         </div>
-        {brand.showFitxnetBadge && (
-          <div className="border-t border-white/10 px-5 py-3 text-center text-xs text-white/50">
-            {locale === "ar" ? "بدعم من FITXNET" : "Powered by FITXNET"}
-          </div>
-        )}
       </aside>
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-1.5 border-b bg-[var(--header)]/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-[var(--header)]/60">
+        <header className="glass hairline-b sticky top-0 z-30 flex h-16 items-center gap-1.5 px-4 md:px-6">
           {/* Mobile nav trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -111,7 +103,7 @@ export function DashboardShell({
             </SheetTrigger>
             <SheetContent side={mobileSide} className="flex w-72 flex-col gap-0 p-0">
               <SheetTitle className="sr-only">{brand.academyName}</SheetTitle>
-              <div className="flex h-16 shrink-0 items-center border-b px-5">
+              <div className="flex h-16 shrink-0 items-center px-5">
                 <BrandLogo />
               </div>
               {/* min-h-0 lets this shrink below its content height so overflow-y-auto engages. */}
@@ -121,11 +113,6 @@ export function DashboardShell({
                   onNavigate={() => setMobileOpen(false)}
                 />
               </div>
-              {brand.showFitxnetBadge && (
-                <div className="shrink-0 border-t px-5 py-3 text-center text-xs text-muted-foreground">
-                  {locale === "ar" ? "بدعم من FITXNET" : "Powered by FITXNET"}
-                </div>
-              )}
             </SheetContent>
           </Sheet>
 

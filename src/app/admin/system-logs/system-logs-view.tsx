@@ -405,7 +405,7 @@ function NoteDialog({
         <div className="space-y-2">
           <Label>{L("ملاحظات", "Notes")}</Label>
           <textarea
-            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-h-[120px] w-full rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-sm hover:bg-muted focus-visible:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />

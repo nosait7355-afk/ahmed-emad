@@ -42,7 +42,7 @@ export function SidebarNav({
       {sections.map((section, i) => (
         <div key={i} className="flex flex-col gap-1">
           {section.label && (
-            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <p className="text-eyebrow px-3 pb-1 text-muted-foreground/80">
               {section.label}
             </p>
           )}
@@ -56,10 +56,10 @@ export function SidebarNav({
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "press group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.9rem] font-medium transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    : "text-foreground/75 hover:bg-muted/70 hover:text-foreground",
                 )}
               >
                 <Icon

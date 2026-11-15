@@ -401,7 +401,7 @@ export function ClientProfileView({
             </CardHeader>
             <CardContent>
               {isFrozen ? (
-                <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+                <div className="rounded-2xl border border-warning/30 bg-warning/10 p-3 text-sm">
                   <p className="font-medium">{L("الاشتراك مجمّد مؤقتاً", "Subscription is temporarily frozen")}</p>
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>{L("الأيام المتبقية المحفوظة:", "Preserved remaining days:")} <b className="text-foreground">{client.freeze.remainingDays ?? "—"}</b></span>
@@ -475,7 +475,7 @@ export function ClientProfileView({
           <Card className="mt-4">
             <CardHeader><CardTitle className="text-base">{L(`تحليل الأداء — آخر ${performanceAnalysis.periodDays} يوماً`, `Performance analysis — last ${performanceAnalysis.periodDays} days`)}</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg border p-3 text-center">
+              <div className="rounded-2xl bg-muted/50 p-3 text-center">
                 {performanceAnalysis.strengthChangePercent != null && performanceAnalysis.strengthChangePercent < 0 ? (
                   <TrendingDown className="mx-auto mb-1 h-4 w-4 text-destructive" />
                 ) : (
@@ -486,22 +486,22 @@ export function ClientProfileView({
                 </p>
                 <p className="text-xs text-muted-foreground">{L("زيادة قوة", "Strength change")}</p>
               </div>
-              <div className="rounded-lg border p-3 text-center">
+              <div className="rounded-2xl bg-muted/50 p-3 text-center">
                 <TrendingUp className="mx-auto mb-1 h-4 w-4 text-success" />
                 <p className="text-lg font-bold">{performanceAnalysis.topGain ? `+${performanceAnalysis.topGain.deltaKg}kg` : "—"}</p>
                 <p className="truncate text-xs text-muted-foreground">{performanceAnalysis.topGain ? (locale === "ar" ? performanceAnalysis.topGain.nameAr : performanceAnalysis.topGain.nameEn) : L("لا يوجد", "None")}</p>
               </div>
-              <div className="rounded-lg border p-3 text-center">
+              <div className="rounded-2xl bg-muted/50 p-3 text-center">
                 <TrendingDown className="mx-auto mb-1 h-4 w-4 text-destructive" />
                 <p className="text-lg font-bold">{performanceAnalysis.topLoss ? `${performanceAnalysis.topLoss.deltaKg}kg` : "—"}</p>
                 <p className="truncate text-xs text-muted-foreground">{performanceAnalysis.topLoss ? (locale === "ar" ? performanceAnalysis.topLoss.nameAr : performanceAnalysis.topLoss.nameEn) : L("لا يوجد", "None")}</p>
               </div>
-              <div className="rounded-lg border p-3 text-center">
+              <div className="rounded-2xl bg-muted/50 p-3 text-center">
                 <Trophy className="mx-auto mb-1 h-4 w-4 text-amber-500" />
                 <p className="text-lg font-bold">{performanceAnalysis.prCount}</p>
                 <p className="text-xs text-muted-foreground">{L("رقم قياسي", "PRs")}</p>
               </div>
-              <div className="rounded-lg border p-3 text-center sm:col-span-4">
+              <div className="rounded-2xl bg-muted/50 p-3 text-center sm:col-span-4">
                 <Timer className="mx-auto mb-1 h-4 w-4 text-primary" />
                 <p className="text-lg font-bold">{performanceAnalysis.avgSessionDurationSeconds != null ? `${Math.round(performanceAnalysis.avgSessionDurationSeconds / 60)} ${L("دقيقة", "min")}` : "—"}</p>
                 <p className="text-xs text-muted-foreground">{L("متوسط مدة الجلسة", "Avg. session duration")}</p>
@@ -528,7 +528,7 @@ export function ClientProfileView({
                   {exerciseChangeHistory.map((h) => {
                     const variant = h.status === "approved" ? "success" : h.status === "rejected" ? "destructive" : "warning";
                     return (
-                      <div key={h.id} className="rounded-lg border p-3">
+                      <div key={h.id} className="rounded-2xl bg-muted/50 p-3">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium">
                             {locale === "ar" ? h.exerciseNameAr : h.exerciseNameEn}

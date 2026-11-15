@@ -66,28 +66,28 @@ export function RepairPlanDurationView({ stats }: { stats: RepairPlanDurationSta
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="flex items-start gap-2 rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             {L("هذا الإجراء لا يمكن التراجع عنه.", "This action cannot be undone.")}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <Package className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
               <div className="text-2xl font-bold">{formatNumber(stats.plansTotal, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("إجمالي عدد الباقات", "Total plans")}</div>
             </div>
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <AlertCircle className="mx-auto mb-2 h-5 w-5 text-destructive" />
               <div className="text-2xl font-bold text-destructive">{formatNumber(stats.plansMissingDurationMonths, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("باقات بمدة غير صحيحة", "Plans missing duration")}</div>
             </div>
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <History className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
               <div className="text-2xl font-bold">{formatNumber(stats.plansWithLegacyDurationDays, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("باقات بحقل قديم (أيام)", "Plans with legacy durationDays")}</div>
             </div>
-            <div className="rounded-lg border p-4 text-center">
+            <div className="rounded-2xl bg-muted/50 p-4 text-center">
               <CheckCircle className="mx-auto mb-2 h-5 w-5 text-emerald-600" />
               <div className="text-2xl font-bold">{formatNumber(stats.plansAlreadyValid, locale)}</div>
               <div className="text-xs text-muted-foreground">{L("باقات سليمة بالفعل", "Already valid plans")}</div>
@@ -95,7 +95,7 @@ export function RepairPlanDurationView({ stats }: { stats: RepairPlanDurationSta
           </div>
 
           {affected > 0 && (
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+            <div className="rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
               {L(
                 `يوجد ${affected} باقة تحتاج إلى إصلاح.`,
                 `${affected} plan(s) need repair.`,
@@ -104,7 +104,7 @@ export function RepairPlanDurationView({ stats }: { stats: RepairPlanDurationSta
           )}
 
           {result && (
-            <div className="flex flex-col gap-1 rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+            <div className="flex flex-col gap-1 rounded-2xl border border-success/25 bg-success/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
               <div className="flex items-center gap-2 font-medium">
                 <CheckCircle2 className="h-4 w-4" />
                 {L("تم إصلاح مدد الباقات بنجاح", "Plan durations were repaired successfully")}

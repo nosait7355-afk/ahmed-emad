@@ -195,7 +195,7 @@ export function TeamView({ members }: { members: TeamMemberRow[] }) {
       <Dialog open={!!newPassword} onOpenChange={(o) => !o && setNewPassword(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>{L("كلمة المرور الجديدة", "New password")}</DialogTitle></DialogHeader>
-          <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+          <div className="flex items-center justify-between rounded-2xl bg-muted/50 px-4 py-3">
             <span className="text-sm text-muted-foreground">{L("كلمة المرور", "Password")}</span>
             <code className="font-mono text-sm font-semibold" dir="ltr">{newPassword}</code>
           </div>
@@ -294,14 +294,14 @@ function TeamMemberDialog({
               { k: L("اسم المستخدم", "Username"), v: creds.username },
               { k: L("كلمة المرور المؤقتة", "Temporary password"), v: creds.password },
             ].map((row) => (
-              <div key={row.k} className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+              <div key={row.k} className="flex items-center justify-between rounded-2xl bg-muted/50 px-4 py-3">
                 <span className="text-sm text-muted-foreground">{row.k}</span>
                 <code className="font-mono text-sm font-semibold" dir="ltr">{row.v}</code>
               </div>
             ))}
           </div>
           {error && (
-            <p role="alert" className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -349,7 +349,7 @@ function TeamMemberDialog({
           </div>
         </div>
         {error && (
-          <p role="alert" className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </p>
         )}

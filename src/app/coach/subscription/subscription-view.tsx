@@ -131,7 +131,7 @@ export function SubscriptionView({
           <CardTitle className="text-base">{L("طرق الدفع (يدوي)", "Payment methods (offline)")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg border p-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
               <Smartphone className="h-5 w-5" />
             </div>
@@ -140,7 +140,7 @@ export function SubscriptionView({
               <p className="text-sm text-muted-foreground">{L("تواصل مع الإدارة لمعرفة الرقم", "Contact admin for the number")}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-lg border p-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
               <Wallet className="h-5 w-5" />
             </div>

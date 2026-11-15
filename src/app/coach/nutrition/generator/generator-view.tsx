@@ -419,7 +419,7 @@ export function NutritionGeneratorView({
                   <button
                     key={h.id}
                     onClick={() => reopen(h)}
-                    className="flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-start transition-colors hover:bg-accent"
+                    className="flex w-full items-center justify-between gap-2 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-colors hover:bg-accent"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">

@@ -277,7 +277,7 @@ function ModeCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-start gap-2 rounded-lg border p-4 text-start transition-colors hover:border-primary hover:bg-accent"
+      className="flex flex-col items-start gap-2 rounded-2xl border border-border/60 p-4 text-start transition-colors hover:border-primary hover:bg-accent"
     >
       {icon}
       <span className="font-medium">{title}</span>
@@ -534,7 +534,7 @@ function ImagePlanFields({
       <div className="space-y-2">
         <Label>{L("ملاحظة (اختياري)", "Note (optional)")}</Label>
         <textarea
-          className="flex min-h-[72px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-h-[72px] w-full rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-sm hover:bg-muted focus-visible:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
