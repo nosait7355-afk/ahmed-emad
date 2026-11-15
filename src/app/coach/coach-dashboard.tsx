@@ -6,14 +6,13 @@ import {
   UserCheck,
   ClipboardCheck,
   MessageSquare,
-  UserPlus,
   Activity,
   Trophy,
   Snowflake,
 } from "lucide-react";
 import type { TopImprovingClient } from "@/lib/services/workout-analytics";
 import type { FreezeAnalytics } from "@/lib/services/subscription-freeze";
-import { PageHeader } from "@/components/dashboard/page-header";
+import { CoachBanner } from "@/components/dashboard/coach-banner";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -56,6 +55,7 @@ export function CoachDashboard({
   topImproving,
   freeze,
   canWrite,
+  firstName,
 }: {
   kpis: CoachKpis;
   subscription: CoachSubscriptionInfo;
@@ -65,6 +65,7 @@ export function CoachDashboard({
   topImproving: TopImprovingClient[];
   freeze: FreezeAnalytics;
   canWrite: boolean;
+  firstName: string;
 }) {
   const { t, locale } = useI18n();
   const s = t.dashboard.stats;
@@ -72,13 +73,12 @@ export function CoachDashboard({
 
   return (
     <div>
-      <PageHeader title={t.dashboard.coachNav.dashboard} description={t.dashboard.overview}>
-        {canWrite && (
-          <Button asChild>
-            <Link href="/coach/clients/new"><UserPlus className="h-4 w-4" />{t.dashboard.coachNav.addClient}</Link>
-          </Button>
-        )}
-      </PageHeader>
+      <CoachBanner
+        firstName={firstName}
+        activeClients={kpis.activeClients}
+        pendingCheckins={kpis.pendingCheckins}
+        canWrite={canWrite}
+      />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label={s.myClients} value={formatNumber(kpis.myClients, locale)} icon={Users} />

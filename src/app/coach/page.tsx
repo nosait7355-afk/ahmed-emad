@@ -1,4 +1,4 @@
-import { requireCoachArea } from "@/lib/auth/session";
+import { requireCoachArea, requireSession } from "@/lib/auth/session";
 import { coachCanWrite } from "@/lib/permissions";
 import { listClients } from "@/lib/services/clients";
 import { listResponses, countPendingCheckins } from "@/lib/services/checkins";
@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CoachHome() {
   const ctx = await requireCoachArea();
+  const session = await requireSession();
   const coachId = ctx.coachId;
   const status = ctx.status;
 
@@ -82,6 +83,7 @@ export default async function CoachHome() {
       topImproving={topImproving}
       freeze={freezeAnalytics}
       canWrite={coachCanWrite(ctx.status)}
+      firstName={(session.user.name ?? "").split(" ")[0]}
     />
   );
 }
