@@ -18,7 +18,7 @@ export function FrozenBanner({
   // surfaces the preserved remaining days.
   if (reason === "frozen_by_coach") {
     return (
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
+      <div className="mb-4 flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm">
         <PauseCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
         <div className="space-y-1">
           <p className="font-medium text-foreground/90">
@@ -46,7 +46,7 @@ export function FrozenBanner({
         );
 
   return (
-    <div className="mb-4 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm">
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm">
       <Lock className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
       <p className="text-foreground/90">{message}</p>
     </div>
@@ -64,7 +64,7 @@ export function SubscriptionCountdownBanner({ daysRemaining }: { daysRemaining: 
   return (
     <div
       className={
-        "mb-4 flex items-center gap-3 rounded-lg border p-3 text-sm " +
+        "mb-4 flex items-center gap-3 rounded-2xl border p-3.5 text-sm " +
         (urgent
           ? "border-destructive/40 bg-destructive/10 text-destructive"
           : "border-warning/40 bg-warning/10 text-foreground/90")
@@ -105,7 +105,7 @@ export function SubscriptionProgressCard({
   const urgent = remaining <= 3;
 
   return (
-    <div className="mb-4 rounded-lg border p-4">
+    <div className="mb-4 rounded-2xl bg-card p-4 shadow-soft">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">{L("اشتراكك", "Your subscription")}</span>
         <span className={urgent ? "font-semibold text-destructive" : "text-muted-foreground"}>

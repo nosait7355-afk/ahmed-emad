@@ -680,7 +680,7 @@ export function WorkoutSession({
           </div>
         )}
 
-        <div className="mt-4 rounded-xl border bg-muted/20 p-3">
+        <div className="mt-4 rounded-2xl bg-muted/50 p-3">
           <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{L("آخر أداء لهذا التمرين", "Last performance for this exercise")}</p>
           {(() => {
             const last = current.exercise ? lastPerformance?.[current.exercise] : undefined;
@@ -713,7 +713,7 @@ export function WorkoutSession({
           })()}
         </div>
 
-        <div className="mt-5 rounded-xl border bg-muted/30 p-4 text-center">
+        <div className="mt-5 rounded-2xl bg-muted/50 p-4 text-center">
           <p className="text-sm font-medium text-primary">
             {L(`المجموعة ${setIndex + 1} من ${current.loggedSets.length}`, `Set ${setIndex + 1} of ${current.loggedSets.length}`)}
           </p>

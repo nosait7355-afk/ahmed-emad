@@ -94,7 +94,7 @@ export function CheckinForm({ access }: { access: ClientAccessState }) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={access.frozen}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex w-full rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-base transition-colors placeholder:text-muted-foreground/80 hover:bg-muted focus-visible:border-ring/50 focus-visible:bg-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15 md:text-sm"
                 placeholder={L("أي شيء تريد إخبار مدربك به...", "Anything you'd like to tell your coach...")}
               />
             </div>
@@ -122,8 +122,8 @@ function Scale10({ value, onChange, disabled }: { value: number; onChange: (v: n
             disabled={disabled}
             onClick={() => onChange(n)}
             className={cn(
-              "h-9 flex-1 rounded-md border text-sm font-medium transition-colors",
-              n <= value ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-accent",
+              "press h-11 flex-1 rounded-[14px] text-sm font-semibold transition-colors",
+              n <= value ? "bg-primary text-primary-foreground" : "bg-muted/70 hover:bg-muted",
             )}
           >
             {n}

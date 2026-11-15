@@ -105,7 +105,7 @@ export function ExerciseChangeRequestDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium">
+          <div className="rounded-2xl bg-muted/50 px-3.5 py-2.5 text-sm font-medium">
             {locale === "ar" ? exerciseNameAr : exerciseNameEn}
           </div>
 
@@ -147,7 +147,7 @@ export function ExerciseChangeRequestDialog({
                 "اشرح للمدرب سبب رغبتك في تغيير هذا التمرين...",
                 "Explain to your coach why you'd like to change this exercise...",
               )}
-              className="w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="resize-none w-full rounded-[14px] border border-transparent bg-muted/70 px-3.5 py-2.5 text-base transition-colors placeholder:text-muted-foreground/80 hover:bg-muted focus-visible:border-ring/50 focus-visible:bg-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/15 md:text-sm"
             />
             <p className="mt-1 text-end text-xs text-muted-foreground" dir="ltr">
               {reason.length}/{MAX_REASON}

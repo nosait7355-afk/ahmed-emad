@@ -99,7 +99,7 @@ export function NutritionView({
               </CardHeader>
               <CardContent className="space-y-1">
                 {meal.items.map((item, ii) => (
-                  <div key={ii} className="flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5">
+                  <div key={ii} className="flex flex-wrap items-center gap-3 rounded-2xl bg-muted/50 px-3.5 py-2.5.5">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{locale === "ar" ? item.nameAr : item.nameEn}</p>
                       <p className="truncate text-xs text-zinc-400">{item.calories} {t.client.calories} · {t.client.protein} {item.protein}g · {t.client.carbs} {item.carbs}g · {t.client.fat} {item.fat}g</p>

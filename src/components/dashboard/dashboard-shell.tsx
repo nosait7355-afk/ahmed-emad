@@ -19,6 +19,7 @@ import { UserMenu } from "./user-menu";
 import { NotificationsMenu, type NotificationItem } from "./notifications-menu";
 import { PushRegistrar } from "@/components/notifications/push-registrar";
 import { MobileTabBar } from "./mobile-tab-bar";
+import { cn } from "@/lib/utils";
 import { getNavForRole } from "./nav-config";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useBrand } from "@/components/providers/brand-provider";
@@ -144,7 +145,6 @@ export function DashboardShell({
           </div>
         </header>
 
-        {role === "client" && <MobileTabBar items={sections[0]?.items ?? []} />}
 
         {showReadOnly && (
           <div className="flex flex-wrap items-center gap-3 border-b border-warning/30 bg-warning/10 px-4 py-2.5 text-sm md:px-6">
@@ -155,7 +155,16 @@ export function DashboardShell({
           </div>
         )}
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main
+          className={cn(
+            "flex-1 p-4 md:p-6 lg:p-8",
+            // Room for the fixed bottom tab bar on mobile.
+            role === "client" && "pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8",
+          )}
+        >
+          {children}
+        </main>
+        {role === "client" && <MobileTabBar items={sections[0]?.items ?? []} />}
       </div>
     </div>
   );

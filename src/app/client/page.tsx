@@ -39,6 +39,15 @@ export default async function ClientHomePage() {
     (logs as unknown as { date: string }[]).map((l) => new Date(l.date).toISOString().slice(0, 10)),
   );
 
+  // Distinct training days in the last 7 days, against the program's days/week.
+  const weekAgo = Date.now() - 7 * 86_400_000;
+  const trainedThisWeek = new Set(
+    (logs as unknown as { date: string }[])
+      .filter((l) => new Date(l.date).getTime() >= weekAgo)
+      .map((l) => new Date(l.date).toISOString().slice(0, 10)),
+  ).size;
+  const daysPerWeek = program?.weeks?.[0]?.days?.length ?? null;
+
   const day1 = program?.weeks?.[0]?.days?.[0];
   const todayWorkout = day1
     ? {
@@ -73,6 +82,9 @@ export default async function ClientHomePage() {
         currentWeight,
         weightChange,
         streak: days.size,
+        trainedThisWeek,
+        daysPerWeek,
+        firstName: (session.user.name ?? session.user.username ?? "").split(" ")[0],
         planCalories: plan?.totals?.calories ?? null,
         todayWorkout,
         todayMeals,
