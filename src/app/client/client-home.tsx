@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Dumbbell,
   Flame,
+  MessageSquare,
   Scale,
   User,
   UtensilsCrossed,
@@ -14,6 +15,7 @@ import {
 import { LineTrend } from "@/components/dashboard/charts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { HeroBanner, BANNER_GHOST_BUTTON } from "@/components/dashboard/coach-banner";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { FrozenBanner, SubscriptionCountdownBanner } from "@/components/client/access-banners";
@@ -51,15 +53,32 @@ export function ClientHome({ data, access }: { data: HomeData; access: ClientAcc
   const weekPct = (data.trainedThisWeek / Math.max(1, weekTarget)) * 100;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      {/* Greeting */}
-      <header className="space-y-1 pt-1">
-        <p className="text-eyebrow text-muted-foreground">{t.dashboard.overview}</p>
-        <h1 className="text-headline">
-          {L("أهلاً", "Hi")}
-          {data.firstName ? ` ${data.firstName}` : ""} 👋
-        </h1>
-      </header>
+    <div className="mx-auto max-w-5xl space-y-5 [&>section:first-child]:mb-0">
+      {/* Greeting banner */}
+      <HeroBanner
+        eyebrow={t.dashboard.overview}
+        title={`${L("أهلاً", "Hi")}${data.firstName ? ` ${data.firstName}` : ""} 👋`}
+        summary={
+          data.todayWorkout
+            ? L(`تمرين النهارده: ${data.todayWorkout.name}`, `Today's workout: ${data.todayWorkout.name}`)
+            : t.client.noWorkoutToday
+        }
+      >
+        {!access.frozen && (
+          <Button asChild>
+            <Link href={data.todayWorkout ? "/client/workout?autostart=1" : "/client/workout"}>
+              <Dumbbell className="h-4 w-4" />
+              {data.todayWorkout ? L("ابدأ التمرين", "Start workout") : t.client.logWeights}
+            </Link>
+          </Button>
+        )}
+        <Button asChild variant="secondary" className={BANNER_GHOST_BUTTON}>
+          <Link href="/client/messages">
+            <MessageSquare className="h-4 w-4" />
+            {t.dashboard.clientNav.messages}
+          </Link>
+        </Button>
+      </HeroBanner>
 
       {access.frozen ? (
         <FrozenBanner reason={access.frozenReason!} remainingDays={access.frozenRemainingDays} />
