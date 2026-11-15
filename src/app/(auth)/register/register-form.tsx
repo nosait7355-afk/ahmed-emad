@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { clientRegisterSchema, type ClientRegisterData } from "@/lib/validations/client-signup";
 import { registerClient } from "@/lib/actions/auth";
@@ -119,18 +118,18 @@ export function RegisterForm({
     errors[key] ? <p className="text-sm text-destructive">{errors[key]?.message as string}</p> : null;
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl">{t.auth.registerTitle}</CardTitle>
-        <CardDescription>{t.auth.registerSubtitle}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <section className="w-full max-w-xl animate-fade-in">
+      <header className="mb-8 space-y-2">
+        <h1 className="text-headline">{t.auth.registerTitle}</h1>
+        <p className="text-muted-foreground">{t.auth.registerSubtitle}</p>
+      </header>
+      <div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
           {/* 1 — Package */}
-          <fieldset className="space-y-2.5">
-            <legend className="mb-2 text-sm font-semibold">{L("١. اختار باقتك", "1. Choose your plan")}</legend>
+          <fieldset className={SECTION}>
+            <Legend n={L("١", "1")}>{L("اختار باقتك", "Choose your plan")}</Legend>
             <input type="hidden" {...register("packageId")} />
-            <div role="radiogroup" aria-label={L("الباقات", "Plans")} className="space-y-2">
+            <div role="radiogroup" aria-label={L("الباقات", "Plans")} className="grid gap-2 sm:grid-cols-2">
               {packages.map((p) => {
                 const active = p.id === packageId;
                 return (
@@ -144,7 +143,7 @@ export function RegisterForm({
                       "press flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition-colors",
                       active
                         ? "border-primary bg-primary/[0.06] ring-4 ring-primary/10"
-                        : "border-border bg-card hover:bg-muted/60",
+                        : "border-transparent bg-muted/60 hover:bg-muted",
                     )}
                   >
                     <span
@@ -187,7 +186,7 @@ export function RegisterForm({
             </div>
             {err("packageId")}
             {selected && selected.features.length > 0 && (
-              <ul className="space-y-1.5 rounded-2xl bg-muted/60 p-3.5 text-sm">
+              <ul className="space-y-1.5 px-1 pt-1 text-sm">
                 {selected.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -199,8 +198,8 @@ export function RegisterForm({
           </fieldset>
 
           {/* 2 — About you */}
-          <fieldset className="space-y-4">
-            <legend className="mb-2 text-sm font-semibold">{L("٢. بياناتك", "2. About you")}</legend>
+          <fieldset className={SECTION}>
+            <Legend n={L("٢", "2")}>{L("بياناتك", "About you")}</Legend>
 
             <div className="space-y-2">
               <Label htmlFor="name">{t.auth.fullName}</Label>
@@ -280,8 +279,8 @@ export function RegisterForm({
           </fieldset>
 
           {/* 3 — Account */}
-          <fieldset className="space-y-4">
-            <legend className="mb-2 text-sm font-semibold">{L("٣. بيانات الدخول", "3. Sign-in details")}</legend>
+          <fieldset className={SECTION}>
+            <Legend n={L("٣", "3")}>{L("بيانات الدخول", "Sign-in details")}</Legend>
 
             <div className="space-y-2">
               <Label htmlFor="username">{t.common.username}</Label>
@@ -319,11 +318,13 @@ export function RegisterForm({
           </fieldset>
 
           {serverError && (
-            <div role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {serverError}
             </div>
           )}
 
+          {/* Sticky on mobile so the price and submit stay in reach of the thumb. */}
+          <div className="glass sticky bottom-0 -mx-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:static sm:mx-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
           <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {selected
@@ -333,16 +334,31 @@ export function RegisterForm({
                 )
               : t.auth.registerButton}
           </Button>
+          </div>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           {t.auth.haveAccount}{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
             {t.auth.signIn}
           </Link>
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  );
+}
+
+const SECTION = "space-y-4 rounded-3xl bg-card p-4 shadow-soft sm:p-5";
+
+/** Numbered section heading for the sign-up steps. */
+function Legend({ n, children }: { n: string; children: React.ReactNode }) {
+  return (
+    <legend className="flex items-center gap-2.5 pb-1 text-base font-semibold">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground">
+        {n}
+      </span>
+      {children}
+    </legend>
   );
 }
 

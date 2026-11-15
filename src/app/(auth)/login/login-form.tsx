@@ -10,13 +10,6 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { homePathForRole } from "@/lib/permissions";
@@ -65,13 +58,13 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="animate-fade-in">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl">{t.auth.loginTitle}</CardTitle>
-        <CardDescription>{t.auth.loginSubtitle}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <section className="w-full max-w-sm animate-fade-in">
+      <header className="mb-8 space-y-2">
+        <h1 className="text-headline">{t.auth.loginTitle}</h1>
+        <p className="text-muted-foreground">{t.auth.loginSubtitle}</p>
+      </header>
+      <div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
           <div className="space-y-2">
             <Label htmlFor="identifier">{t.auth.usernameOrEmail}</Label>
             <Input
@@ -104,18 +97,18 @@ export function LoginForm() {
           </div>
 
           {serverError && (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {serverError}
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {t.auth.loginButton}
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           {t.auth.noAccount}{" "}
           <Link
             href="/register"
@@ -127,7 +120,7 @@ export function LoginForm() {
         <p className="mt-2 text-center text-xs text-muted-foreground">
           {t.auth.clientLoginNote}
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
