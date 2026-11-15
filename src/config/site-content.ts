@@ -28,7 +28,7 @@ export const HERO: {
     en: "A training and nutrition plan built around you, with real step-by-step follow-up until you reach your goal.",
   },
   ctaPrimary: { ar: "ابدأ التغيير", en: "Start now" },
-  ctaSecondary: { ar: "شوف الباقات", en: "See plans" },
+  ctaSecondary: { ar: "تسجيل الدخول", en: "Sign in" },
   badge: { ar: "مدرب معتمد", en: "Certified Coach" },
 };
 

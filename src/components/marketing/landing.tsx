@@ -82,7 +82,7 @@ export function Landing({ packages }: { packages: PackageDTO[] }) {
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-                  <a href="#pricing">{tr(HERO.ctaSecondary)}</a>
+                  <Link href="/login">{tr(HERO.ctaSecondary)}</Link>
                 </Button>
               </div>
             </Reveal>
