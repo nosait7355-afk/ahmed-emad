@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { RegisterForm } from "./register-form";
 import { SignupClosed } from "./signup-closed";
 import { getPrimaryCoachId } from "@/lib/services/coach-account";
-import { ensureDefaultPackages, listPackages } from "@/lib/services/coaching-packages";
+import { ensureDefaultPackages, listPackages, type PackageDTO } from "@/lib/services/coaching-packages";
 
 export const metadata: Metadata = {
   title: "ابدأ اشتراكك",
@@ -17,11 +17,18 @@ export default async function RegisterPage({
   searchParams: Promise<{ package?: string }>;
 }) {
   const { package: preselected } = await searchParams;
-  const coachId = await getPrimaryCoachId();
-  if (!coachId) return <SignupClosed />;
-
-  await ensureDefaultPackages(coachId);
-  const packages = await listPackages(coachId, { activeOnly: true });
+  // If the database is unreachable, show the WhatsApp fallback instead of
+  // crashing the page.
+  let packages: PackageDTO[] = [];
+  try {
+    const coachId = await getPrimaryCoachId();
+    if (coachId) {
+      await ensureDefaultPackages(coachId);
+      packages = await listPackages(coachId, { activeOnly: true });
+    }
+  } catch (e) {
+    console.error("[register] could not load packages:", e);
+  }
   if (packages.length === 0) return <SignupClosed />;
 
   return <RegisterForm packages={packages} preselectedPackageId={preselected} />;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { LanguageSwitcher } from "@/components/brand/language-switcher";
@@ -11,28 +11,45 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const navLinks = [
-    { href: "#features", label: t.nav.features },
-    { href: "#pricing", label: t.nav.pricing },
+    { href: "#services", label: L("الخدمات", "Services") },
+    { href: "#about", label: L("الكابتن", "Coach") },
+    { href: "#results", label: L("النتائج", "Results") },
+    { href: "#pricing", label: L("الباقات", "Pricing") },
+    { href: "#faq", label: L("الأسئلة", "FAQ") },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className={cn(
+        "sticky top-0 z-40 w-full transition-[box-shadow,background-color] duration-300",
+        scrolled || open ? "glass hairline-b" : "bg-transparent",
+      )}
+    >
       <div className="container flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-8">
           <Logo />
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-6 lg:flex" aria-label={L("التنقل الرئيسي", "Main navigation")}>
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.href}
                 href={link.href}
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </nav>
         </div>
@@ -45,15 +62,16 @@ export function SiteHeader() {
               <Link href="/login">{t.nav.login}</Link>
             </Button>
             <Button asChild size="sm">
-              <Link href="/register">{t.nav.startTrial}</Link>
+              <Link href="/register">{L("اشترك الآن", "Subscribe")}</Link>
             </Button>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden"
             onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
+            aria-label={L("القائمة", "Menu")}
+            aria-expanded={open}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -61,29 +79,24 @@ export function SiteHeader() {
       </div>
 
       {/* Mobile menu */}
-      <div
-        className={cn(
-          "border-t md:hidden",
-          open ? "block" : "hidden",
-        )}
-      >
-        <nav className="container flex flex-col gap-1 py-4">
+      <div className={cn("lg:hidden", open ? "block" : "hidden")}>
+        <nav className="container flex flex-col gap-1 pb-5 pt-1">
           {navLinks.map((link) => (
-            <Link
+            <a
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="rounded-xl px-3 py-2.5 text-base font-medium text-foreground/90 hover:bg-accent"
             >
               {link.label}
-            </Link>
+            </a>
           ))}
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <Button asChild variant="outline">
               <Link href="/login">{t.nav.login}</Link>
             </Button>
             <Button asChild>
-              <Link href="/register">{t.nav.startTrial}</Link>
+              <Link href="/register">{L("اشترك الآن", "Subscribe")}</Link>
             </Button>
           </div>
         </nav>
