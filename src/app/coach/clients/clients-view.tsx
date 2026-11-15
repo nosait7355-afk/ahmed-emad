@@ -227,7 +227,7 @@ export function ClientsView({
                   </TableHeader>
                   <TableBody>
                     {filtered.map((c) => (
-                      <TableRow key={c.id}>
+                      <TableRow key={c.id} className="cursor-pointer" onClick={() => router.push(`/coach/clients/${c.id}`)}>
                         <TableCell>
                           <Link href={`/coach/clients/${c.id}`} className="flex items-center gap-3">
                             <Avatar className="h-9 w-9">
@@ -255,7 +255,7 @@ export function ClientsView({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isPending}>
