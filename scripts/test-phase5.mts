@@ -17,7 +17,7 @@ function check(name: string, cond: boolean) {
 async function main() {
   const mem = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mem.getUri();
-  process.env.MONGODB_DB = "trainygo_test5";
+  process.env.MONGODB_DB = "ae_test5";
 
   const { connectToDatabase } = await import("@/lib/db");
   const { User } = await import("@/models/User");

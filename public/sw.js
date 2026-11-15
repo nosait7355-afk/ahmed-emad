@@ -1,5 +1,5 @@
 /*
- * FITXNET Service Worker — intentionally THIN.
+ * Service Worker — intentionally THIN.
  *
  * It contains NO business logic: no deciding whether/whom/what to notify, no
  * localization, no filtering, no dedupe. The backend builds a finished payload
@@ -13,7 +13,7 @@
  * screen inside the same engine. It never caches API responses or app data.
  */
 
-const OFFLINE_CACHE = "fitxnet-offline-v1";
+const OFFLINE_CACHE = "ae-offline-v1";
 const OFFLINE_URL = "/offline.html";
 
 // 1) Receive push → show the pre-built notification.
@@ -125,7 +125,7 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((k) => k.startsWith("fitxnet-offline-") && k !== OFFLINE_CACHE)
+        keys.filter((k) => (k.startsWith("ae-offline-") || k.startsWith("fitxnet-offline-")) && k !== OFFLINE_CACHE)
           .map((k) => caches.delete(k)),
       );
       await self.clients.claim();

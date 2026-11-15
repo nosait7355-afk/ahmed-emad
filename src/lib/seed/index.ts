@@ -45,9 +45,9 @@ export async function seedAdmin(log: Log) {
   if (await User.exists({ role: "super_admin" })) return log("• super admin — skipped");
   const username = (process.env.SEED_ADMIN_USERNAME || "admin").toLowerCase();
   await User.create({
-    name: "FITXNET Admin",
+    name: "Site Admin",
     username,
-    email: (process.env.SEED_ADMIN_EMAIL || "admin@fitxnet.com").toLowerCase(),
+    email: (process.env.SEED_ADMIN_EMAIL || "admin@example.com").toLowerCase(),
     passwordHash: await hashPassword(process.env.SEED_ADMIN_PASSWORD || "fit#x#net2026#!"),
     role: "super_admin",
     status: "active",

@@ -3,7 +3,7 @@ import { LOCALES, DEFAULT_LOCALE, type Locale } from "@/lib/constants";
 export { LOCALES, DEFAULT_LOCALE };
 export type { Locale };
 
-export const LOCALE_COOKIE = "trainygo_locale";
+export const LOCALE_COOKIE = "ae_locale";
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   ar: "العربية",

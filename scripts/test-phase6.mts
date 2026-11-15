@@ -12,7 +12,7 @@ const check = (name: string, cond: boolean) => { console.log(`${cond ? "✓" : "
 async function main() {
   const mem = await MongoMemoryServer.create({ instance: { storageEngine: "ephemeralForTest" } });
   process.env.MONGODB_URI = mem.getUri();
-  process.env.MONGODB_DB = "trainygo_test6";
+  process.env.MONGODB_DB = "ae_test6";
 
   const { connectToDatabase } = await import("@/lib/db");
   const { User } = await import("@/models/User");

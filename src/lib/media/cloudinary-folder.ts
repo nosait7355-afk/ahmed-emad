@@ -21,15 +21,15 @@ export function isUploadKind(value: unknown): value is UploadKind {
   return typeof value === "string" && (UPLOAD_KINDS as readonly string[]).includes(value);
 }
 
-const ROOT = "trainygo";
+const ROOT = "ahmed-emad";
 
 /**
  * Builds the server-authoritative folder for an upload, scoped to the tenant.
  *
- * - coach / team_member → `trainygo/coach/{coachId}/{kind}` (team members
+ * - coach / team_member → `ahmed-emad/coach/{coachId}/{kind}` (team members
  *   upload into their owner coach's namespace, never their own).
- * - client              → `trainygo/clients/{clientId}/{kind}`.
- * - super_admin         → `trainygo/system/{kind}` (system exercises/foods).
+ * - client              → `ahmed-emad/clients/{clientId}/{kind}`.
+ * - super_admin         → `ahmed-emad/system/{kind}` (system exercises/foods).
  *
  * `scopeId` is the coachId for coach/team_member, the client's own id for a
  * client, and ignored for super_admin.

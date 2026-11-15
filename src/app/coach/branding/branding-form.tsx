@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Save, Building2, Palette, SlidersHorizontal, Loader2, RotateCcw } from "lucide-react";
+import { Save, Building2, Palette, Loader2, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,15 +28,15 @@ type FormState = {
 };
 
 // Defined inline to avoid importing server-only modules (brand-settings.ts uses mongoose/db).
-const FITXNET_DEFAULT_BRAND: FormState = {
-  academyName: "FITXNET",
+const DEFAULT_BRAND: FormState = {
+  academyName: "Ahmed Emad",
   primaryColor: "#DC2626",
   secondaryColor: "#111827",
   buttonColor: "#DC2626",
   headerColor: "#111827",
   sidebarColor: "#0B0B0B",
   linkColor: "#DC2626",
-  showFitxnetBadge: true,
+  showFitxnetBadge: false,
 };
 
 const COLOR_FIELDS: { key: keyof FormState; ar: string; en: string }[] = [
@@ -52,7 +52,7 @@ export function BrandingForm({ initialBrand }: { initialBrand: FormState | null 
   const { locale } = useI18n();
   const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
 
-  const base: FormState = { ...FITXNET_DEFAULT_BRAND, ...(initialBrand ?? {}) };
+  const base: FormState = { ...DEFAULT_BRAND, ...(initialBrand ?? {}) };
   const [form, setForm] = useState<FormState>(base);
   const set = <K extends keyof FormState>(k: K) => (v: FormState[K]) =>
     setForm((s) => ({ ...s, [k]: v }));
@@ -94,7 +94,7 @@ export function BrandingForm({ initialBrand }: { initialBrand: FormState | null 
         setMsg({ type: "error", text: L("تعذّر إعادة التعيين", "Could not reset branding") });
         return;
       }
-      setForm({ ...FITXNET_DEFAULT_BRAND });
+      setForm({ ...DEFAULT_BRAND });
       setMsg({ type: "ok", text: L("تمت إعادة التعيين إلى الإعدادات الافتراضية", "Reset to defaults") });
     });
   }
@@ -180,25 +180,6 @@ export function BrandingForm({ initialBrand }: { initialBrand: FormState | null 
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <SlidersHorizontal className="h-4 w-4 text-primary" />
-              {L("خيارات إضافية", "Branding options")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-input"
-                checked={form.showFitxnetBadge}
-                onChange={(e) => set("showFitxnetBadge")(e.target.checked)}
-              />
-              {L('إظهار شارة "بدعم من FITXNET" في الشريط الجانبي', 'Show "Powered by FITXNET" badge in the sidebar')}
-            </label>
-          </CardContent>
-        </Card>
 
         {msg && (
           <p className={msg.type === "ok" ? "text-sm text-emerald-600" : "text-sm text-destructive"}>

@@ -6,11 +6,11 @@ import type { Locale } from "@/lib/constants";
  */
 const ar = {
   brand: {
-    name: "FITXNET",
-    tagline: "منصة متكاملة للمدربين الشخصيين",
+    name: "أحمد عماد",
+    tagline: "تدريب شخصي وأونلاين كوتشينج",
   },
   common: {
-    appName: "FITXNET",
+    appName: "أحمد عماد",
     loading: "جارٍ التحميل...",
     save: "حفظ",
     cancel: "إلغاء",
@@ -70,7 +70,7 @@ const ar = {
     startTrial: "اشترك الآن",
   },
   landing: {
-    heroTitle: "إدارة عملائك وبرامجك التدريبية باحترافية مع FITXNET",
+    heroTitle: "تدريب شخصي وأونلاين كوتشينج مع الكابتن أحمد عماد",
     heroSubtitle:
       "منصة متكاملة للمدربين الشخصيين لإدارة التدريب والتغذية والمتابعات والقياسات في مكان واحد.",
     ctaStart: "ابدأ التجربة المجانية",
@@ -94,10 +94,10 @@ const ar = {
       messagingDesc: "تواصل مباشر مع عملائك عبر محادثة خاصة وآمنة.",
     },
     ctaSectionTitle: "جاهز لتطوير عملك التدريبي؟",
-    ctaSectionSubtitle: "انضم إلى FITXNET اليوم وابدأ تجربتك المجانية.",
+    ctaSectionSubtitle: "ابدأ اشتراكك النهارده مع الكابتن أحمد عماد.",
   },
   footer: {
-    rights: "© FITXNET. جميع الحقوق محفوظة.",
+    rights: "© أحمد عماد. جميع الحقوق محفوظة.",
     product: "المنتج",
     company: "الشركة",
     legal: "قانوني",
@@ -309,11 +309,11 @@ export type Dictionary = typeof ar;
 
 const en: Dictionary = {
   brand: {
-    name: "FITXNET",
-    tagline: "The all-in-one platform for personal trainers",
+    name: "Ahmed Emad",
+    tagline: "Personal Training & Online Coaching",
   },
   common: {
-    appName: "FITXNET",
+    appName: "Ahmed Emad",
     loading: "Loading...",
     save: "Save",
     cancel: "Cancel",
@@ -373,7 +373,7 @@ const en: Dictionary = {
     startTrial: "Subscribe now",
   },
   landing: {
-    heroTitle: "Manage your clients and training programs professionally with FITXNET",
+    heroTitle: "Personal training and online coaching with Coach Ahmed Emad",
     heroSubtitle:
       "An all-in-one platform for personal trainers to manage training, nutrition, check-ins and measurements in one place.",
     ctaStart: "Start free trial",
@@ -397,10 +397,10 @@ const en: Dictionary = {
       messagingDesc: "Communicate directly with your clients through private, secure chat.",
     },
     ctaSectionTitle: "Ready to grow your coaching business?",
-    ctaSectionSubtitle: "Join FITXNET today and start your free trial.",
+    ctaSectionSubtitle: "Start your coaching with Ahmed Emad today.",
   },
   footer: {
-    rights: "© FITXNET. All Rights Reserved.",
+    rights: "© Ahmed Emad. All Rights Reserved.",
     product: "Product",
     company: "Company",
     legal: "Legal",

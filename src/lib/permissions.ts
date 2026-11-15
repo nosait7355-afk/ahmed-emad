@@ -1,7 +1,7 @@
 import type { AccountStatus, UserRole } from "@/lib/constants";
 
 /**
- * Central authorization rules for Trainygo. Kept pure (status in → boolean out)
+ * Central authorization rules for the app. Kept pure (status in → boolean out)
  * so the same logic drives middleware, server actions, and UI affordances.
  */
 

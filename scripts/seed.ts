@@ -1,5 +1,5 @@
 /**
- * Trainygo database seeder.
+ * Database seeder.
  *
  * Idempotent: each section seeds only when its data is missing, so it is safe
  * to re-run. Seeds Super Admin, plans, settings, and the starter exercise /

@@ -24,9 +24,9 @@ export default function AdminSettingsPage() {
             <CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4 text-primary" />{L("هوية المنصة", "Platform identity")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2"><Label>{L("اسم المنصة", "Platform name")}</Label><Input defaultValue="FITXNET" /></div>
-            <div className="space-y-2"><Label>{L("الدومين", "Domain")}</Label><Input dir="ltr" defaultValue="fitxnet.com" /></div>
-            <div className="space-y-2 sm:col-span-2"><Label>{L("بريد الدعم", "Support email")}</Label><Input dir="ltr" defaultValue="support@fitxnet.com" /></div>
+            <div className="space-y-2"><Label>{L("اسم المنصة", "Platform name")}</Label><Input defaultValue="Ahmed Emad" /></div>
+            <div className="space-y-2"><Label>{L("الدومين", "Domain")}</Label><Input dir="ltr" defaultValue="ahmed-emad-one.vercel.app" /></div>
+            <div className="space-y-2 sm:col-span-2"><Label>{L("بريد الدعم", "Support email")}</Label><Input dir="ltr" defaultValue="" /></div>
           </CardContent>
         </Card>
 

@@ -16,7 +16,7 @@ async function main() {
     instance: { storageEngine: "ephemeralForTest", dbPath: ".tmp-mongo-test" },
   });
   process.env.MONGODB_URI = mem.getUri();
-  process.env.MONGODB_DB = "trainygo_test_errorlog";
+  process.env.MONGODB_DB = "ae_test_errorlog";
   process.env.NODE_ENV = "development";
 
   const { connectToDatabase } = await import("@/lib/db");

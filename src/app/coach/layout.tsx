@@ -3,7 +3,7 @@ import { requireCoachArea } from "@/lib/auth/session";
 import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { listNotifications, countUnread } from "@/lib/services/notifications";
-import { getEffectiveBrand, FITXNET_DEFAULT_BRAND } from "@/lib/services/brand-settings";
+import { getEffectiveBrand, DEFAULT_BRAND } from "@/lib/services/brand-settings";
 import { hasBrandingAccess } from "@/lib/services/feature-access";
 import { BrandProvider } from "@/components/providers/brand-provider";
 import { canAccessBranding } from "@/lib/permissions/team";
@@ -42,7 +42,7 @@ export default async function CoachLayout({
   // inherit the owner's academy identity (name/colors/logo) unconditionally.
   const brand = hasAccess
     ? await getEffectiveBrand(ctx.coachId)
-    : { ...FITXNET_DEFAULT_BRAND };
+    : { ...DEFAULT_BRAND };
   const notifications: NotificationItem[] = raw.map((n) => ({
     id: String(n._id),
     type: n.type,

@@ -51,8 +51,8 @@ export async function POST(req: Request) {
   const result = await dispatchNotification({
     recipient: session.user.id,
     type: "system",
-    titleAr: "إشعار تجريبي من FITXNET",
-    titleEn: "Test notification from FITXNET",
+    titleAr: "إشعار تجريبي",
+    titleEn: "Test notification",
     bodyAr: "وصلك هذا الإشعار؟ إذًا كل شيء يعمل بنجاح ✅",
     bodyEn: "Got this? Then everything works ✅",
     link: "/",

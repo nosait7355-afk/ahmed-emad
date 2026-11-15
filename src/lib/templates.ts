@@ -5,7 +5,7 @@
  *
  * `isSystemTemplate` is the single stored source of truth for authorship: true
  * means a super admin authored it, which is exactly what makes it both GLOBAL
- * (visible to every coach) and OFFICIAL (badged as coming from FITXNET). Those
+ * (visible to every coach) and OFFICIAL (badged as official). Those
  * are two names for one fact, so `official` is DERIVED here rather than stored
  * as a second boolean that could drift out of sync with the first — and no
  * migration is needed for it.
@@ -23,7 +23,7 @@ export function isGlobalTemplate(tpl: TemplateOwnership): boolean {
 }
 
 /**
- * True for templates authored by FITXNET itself. Identical to
+ * True for templates authored by the site admin. Identical to
  * `isGlobalTemplate` by construction — kept as its own name because the two
  * describe different things to the reader: one is a visibility rule, the other
  * is what the coach sees on the badge.

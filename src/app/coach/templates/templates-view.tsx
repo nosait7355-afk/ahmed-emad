@@ -60,7 +60,7 @@ export interface WorkoutTplItem {
   goal?: ClientGoal;
   weeks: number;
   days: number;
-  /** Authored by FITXNET: visible to every coach, read-only to them. */
+  /** Authored by the site admin: visible to every coach, read-only to them. */
   official: boolean;
   featured: boolean;
   version: number;

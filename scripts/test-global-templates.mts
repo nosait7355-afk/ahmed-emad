@@ -37,7 +37,7 @@ async function main() {
 
   const mem = await MongoMemoryServer.create({ instance: { dbPath } });
   process.env.MONGODB_URI = mem.getUri();
-  process.env.MONGODB_DB = "fitxnet_test_global";
+  process.env.MONGODB_DB = "ae_test_global";
 
   const { connectToDatabase } = await import("@/lib/db");
   const { WorkoutTemplate } = await import("@/models/WorkoutTemplate");

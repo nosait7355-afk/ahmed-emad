@@ -1,7 +1,9 @@
-# Trainygo
+# Ahmed Emad — Personal Training
 
-SaaS platform for personal trainers and fitness coaches — manage clients,
-training programs, nutrition plans, check-ins and measurements from one place.
+Single-trainer site for Coach Ahmed Emad: a public landing page, client
+self sign-up with coaching packages, and the coaching app (training programs,
+nutrition plans, check-ins, progress and messaging). The one coach account is
+created by the super admin.
 
 Arabic-first (RTL) with full English (LTR) support, light/dark theming, and
 offline subscription management.
@@ -72,7 +74,7 @@ src/
 ## Internationalization
 
 - Default locale: **Arabic (RTL)**. English (LTR) fully supported.
-- Locale is stored in the `trainygo_locale` cookie and (for logged-in users)
+- Locale is stored in the `ae_locale` cookie and (for logged-in users)
   on the user profile. The root layout sets `<html lang dir>` from the cookie.
 - All UI strings live in `src/lib/i18n/dictionaries.ts`. The Arabic dictionary
   is the canonical shape; English is type-checked against it.

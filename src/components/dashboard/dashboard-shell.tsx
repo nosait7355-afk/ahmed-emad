@@ -27,7 +27,7 @@ import { coachIsReadOnly } from "@/lib/permissions";
 import type { AccountStatus, UserRole } from "@/lib/constants";
 import type { TeamPermissionContext } from "@/lib/permissions/team";
 
-/** Brand-aware sidebar/sheet logo: shows the coach's custom logo + academy name when configured, else the default FITXNET wordmark. */
+/** Brand-aware sidebar/sheet logo: shows the coach's custom logo + academy name when configured, else the site wordmark. */
 function BrandLogo() {
   const brand = useBrand();
   return (

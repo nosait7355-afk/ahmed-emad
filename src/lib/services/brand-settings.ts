@@ -5,8 +5,8 @@ export type BrandSettings = NonNullable<
   NonNullable<InstanceType<typeof User>["coachProfile"]>["brandSettings"]
 >;
 
-/** FITXNET's own default branding — used whenever a coach has no white-label config. */
-export const FITXNET_DEFAULT_BRAND: BrandSettings = {
+/** Site default branding — used whenever a coach has no custom brand config. */
+export const DEFAULT_BRAND: BrandSettings = {
   academyName: "Ahmed Emad",
   logo: undefined,
   primaryColor: "#DC2626",
@@ -18,7 +18,7 @@ export const FITXNET_DEFAULT_BRAND: BrandSettings = {
   loginImage: undefined,
   dashboardImage: undefined,
   favicon: undefined,
-  showFitxnetBadge: true,
+  showFitxnetBadge: false,
 };
 
 /** Raw brand settings as stored on the coach, or null if not configured. */
@@ -31,14 +31,14 @@ export async function getBrandSettings(
   return brand ? (brand as BrandSettings) : null;
 }
 
-/** Coach's brand settings merged over FITXNET defaults — always returns a complete object. */
+/** Coach's brand settings merged over the site defaults — always returns a complete object. */
 export async function getEffectiveBrand(
   coachId?: string | null,
 ): Promise<BrandSettings> {
-  if (!coachId) return { ...FITXNET_DEFAULT_BRAND };
+  if (!coachId) return { ...DEFAULT_BRAND };
   const brand = await getBrandSettings(coachId);
-  if (!brand) return { ...FITXNET_DEFAULT_BRAND };
-  return { ...FITXNET_DEFAULT_BRAND, ...brand };
+  if (!brand) return { ...DEFAULT_BRAND };
+  return { ...DEFAULT_BRAND, ...brand };
 }
 
 /** Resolve a client's coach and return that coach's effective brand. For client-facing pages. */
@@ -60,8 +60,8 @@ export async function updateBrandSettings(
   if (!coach || coach.role !== "coach") {
     throw new Error("Coach not found");
   }
-  const current = coach.coachProfile?.brandSettings ?? FITXNET_DEFAULT_BRAND;
-  const merged = { ...FITXNET_DEFAULT_BRAND, ...current, ...patch } as BrandSettings;
+  const current = coach.coachProfile?.brandSettings ?? DEFAULT_BRAND;
+  const merged = { ...DEFAULT_BRAND, ...current, ...patch } as BrandSettings;
   if (!coach.coachProfile) {
     throw new Error("Coach profile missing");
   }

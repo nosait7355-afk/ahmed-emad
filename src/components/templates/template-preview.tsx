@@ -75,8 +75,8 @@ function PreviewShell({
         <OfficialTemplateBadge />
         <p className="text-sm text-muted-foreground">
           {L(
-            "هذا قالب رسمي من FITXNET — للقراءة فقط. انسخه لتحصل على نسخة خاصة بك يمكنك تعديلها.",
-            "This is an official FITXNET template — read only. Duplicate it to get your own editable copy.",
+            "هذا قالب رسمي — للقراءة فقط. انسخه لتحصل على نسخة خاصة بك يمكنك تعديلها.",
+            "This is an official template — read only. Duplicate it to get your own editable copy.",
           )}
         </p>
       </div>

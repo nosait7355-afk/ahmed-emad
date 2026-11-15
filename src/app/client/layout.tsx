@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { listNotifications, countUnread } from "@/lib/services/notifications";
-import { getEffectiveBrandForClient, FITXNET_DEFAULT_BRAND } from "@/lib/services/brand-settings";
+import { getEffectiveBrandForClient, DEFAULT_BRAND } from "@/lib/services/brand-settings";
 import { hasBrandingAccessForClient } from "@/lib/services/feature-access";
 import { BrandProvider } from "@/components/providers/brand-provider";
 import type { NotificationItem } from "@/components/dashboard/notifications-menu";
@@ -38,7 +38,7 @@ export default async function ClientLayout({
   ]);
   const brand = hasAccess
     ? await getEffectiveBrandForClient(session.user.id)
-    : { ...FITXNET_DEFAULT_BRAND };
+    : { ...DEFAULT_BRAND };
   const notifications: NotificationItem[] = raw.map((n) => ({
     id: String(n._id),
     type: n.type,

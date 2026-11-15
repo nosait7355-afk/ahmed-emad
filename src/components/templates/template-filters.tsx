@@ -14,12 +14,12 @@ export type TemplateSource = "all" | "mine" | "global";
 export interface FilterableTemplate {
   nameAr: string;
   nameEn: string;
-  /** Authored by FITXNET: visible to every coach, read-only to them. */
+  /** Authored by the site admin: visible to every coach, read-only to them. */
   official: boolean;
 }
 
 /**
- * Marks a template as official (FITXNET-authored, read-only for coaches) or
+ * Marks a template as official (admin-authored, read-only for coaches) or
  * private to the coach.
  */
 export function TemplateSourceBadge({ official }: { official: boolean }) {
@@ -47,7 +47,7 @@ export function OfficialTemplateBadge() {
   return (
     <Badge variant="default" className="gap-1">
       <BadgeCheck className="h-3 w-3" />
-      {locale === "ar" ? "قالب رسمي من FITXNET" : "Official FITXNET template"}
+      {locale === "ar" ? "قالب رسمي" : "Official template"}
     </Badge>
   );
 }

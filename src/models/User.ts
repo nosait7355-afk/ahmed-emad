@@ -60,7 +60,7 @@ export interface ICoachProfile {
   featureOverrides?: {
     branding?: boolean | null;
   };
-  /** White-label branding configuration for this coach's academy. Optional — absence means use FITXNET defaults. */
+  /** White-label branding configuration for this coach's academy. Optional — absence means use the site defaults. */
   brandSettings?: {
     academyName: string;
     logo?: string;

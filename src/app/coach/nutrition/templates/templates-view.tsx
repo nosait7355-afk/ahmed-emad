@@ -36,7 +36,7 @@ export interface NutritionTplItem {
   nameEn: string;
   targetCalories?: number;
   meals: number;
-  /** Authored by FITXNET: visible to every coach, read-only to them. */
+  /** Authored by the site admin: visible to every coach, read-only to them. */
   official: boolean;
   featured: boolean;
   version: number;

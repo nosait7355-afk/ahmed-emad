@@ -10,7 +10,7 @@
  * build time, which means it must be read as a static member expression (never
  * destructured or indexed dynamically) for the replacement to happen.
  */
-const FALLBACK_ORIGIN = "https://fitxnet.com";
+const FALLBACK_ORIGIN = "https://ahmed-emad-one.vercel.app";
 
 /** Public origin, no trailing slash. Falls back to production if unset. */
 export const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || FALLBACK_ORIGIN).replace(/\/+$/, "");

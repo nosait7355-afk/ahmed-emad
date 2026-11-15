@@ -19,7 +19,7 @@ async function main() {
   const mem = await MongoMemoryServer.create({ instance: { launchTimeout: 120_000 } });
   const uri = mem.getUri();
   process.env.MONGODB_URI = uri;
-  process.env.MONGODB_DB = "trainygo_preview";
+  process.env.MONGODB_DB = "ae_preview";
 
   const { connectToDatabase } = await import("@/lib/db");
   const { User } = await import("@/models/User");
@@ -31,7 +31,7 @@ async function main() {
   // Seed admin + plans + settings + starter libraries (exercises/foods/templates).
   process.env.SEED_ADMIN_USERNAME = "admin";
   process.env.SEED_ADMIN_PASSWORD = "Admin123!";
-  process.env.SEED_ADMIN_EMAIL = "admin@trainygo.com";
+  process.env.SEED_ADMIN_EMAIL = "admin@example.com";
   const { seedAll } = await import("@/lib/seed");
   await seedAll(() => {});
 
@@ -39,7 +39,7 @@ async function main() {
   const coach = await User.create({
     name: "Ahmed Hassan",
     username: "coach",
-    email: "coach@trainygo.com",
+    email: "coach@example.com",
     phone: "21028676395",
     passwordHash: await hashPassword("Coach123!"),
     role: "coach",
@@ -121,7 +121,7 @@ async function main() {
   // build instead (run `npm run build` first).
   const mode = process.env.PREVIEW_MODE === "start" ? "start" : "dev";
   const child = spawn("npx", ["next", mode, "-p", "3000"], {
-    env: { ...process.env, MONGODB_URI: uri, MONGODB_DB: "trainygo_preview" },
+    env: { ...process.env, MONGODB_URI: uri, MONGODB_DB: "ae_preview" },
     stdio: "inherit",
     shell: true,
   });

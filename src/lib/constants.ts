@@ -1,5 +1,5 @@
 /**
- * Shared enums & constants for Trainygo.
+ * Shared enums & constants for the app.
  * Kept framework-agnostic so they can be imported on client and server.
  */
 

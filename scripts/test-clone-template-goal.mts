@@ -16,7 +16,7 @@ async function main() {
     instance: { storageEngine: "ephemeralForTest", dbPath: ".tmp-mongo-clone" },
   });
   process.env.MONGODB_URI = mem.getUri();
-  process.env.MONGODB_DB = "trainygo_test_clone";
+  process.env.MONGODB_DB = "ae_test_clone";
 
   const { connectToDatabase } = await import("@/lib/db");
   const { WorkoutTemplate } = await import("@/models/WorkoutTemplate");

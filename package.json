@@ -1,8 +1,8 @@
 {
-  "name": "trainygo",
+  "name": "ahmed-emad",
   "version": "0.1.0",
   "private": true,
-  "description": "Trainygo — SaaS platform for personal trainers and fitness coaches.",
+  "description": "Ahmed Emad — personal training and online coaching site.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

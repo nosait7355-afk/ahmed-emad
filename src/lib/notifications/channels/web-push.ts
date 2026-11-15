@@ -16,7 +16,7 @@ function ensureConfigured(): boolean {
   if (configured) return true;
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT || "mailto:admin@fitxnet.com";
+  const subject = process.env.VAPID_SUBJECT || "https://ahmed-emad-one.vercel.app";
   if (!publicKey || !privateKey) return false;
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;
