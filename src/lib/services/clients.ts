@@ -64,6 +64,7 @@ export async function listClients(
     role: "client",
     "clientProfile.coach": new Types.ObjectId(coachId),
   };
+  filter["clientProfile.signupStatus"] = { $ne: "pending" };
   if (!opts.includeArchived) filter["clientProfile.active"] = true;
   if (opts.status && opts.status !== "all") filter.status = opts.status;
   if (opts.query) {
@@ -264,8 +265,14 @@ export async function coachClientStats(coachId: string) {
   await connectToDatabase();
   const coach = new Types.ObjectId(coachId);
   const [total, active] = await Promise.all([
-    User.countDocuments({ role: "client", "clientProfile.coach": coach }),
-    User.countDocuments({ role: "client", "clientProfile.coach": coach, "clientProfile.active": true, status: "active" }),
+    User.countDocuments({ role: "client", "clientProfile.coach": coach, "clientProfile.signupStatus": { $ne: "pending" } }),
+    User.countDocuments({
+      role: "client",
+      "clientProfile.coach": coach,
+      "clientProfile.active": true,
+      "clientProfile.signupStatus": { $ne: "pending" },
+      status: "active",
+    }),
   ]);
   return { total, active };
 }

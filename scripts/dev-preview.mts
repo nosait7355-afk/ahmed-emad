@@ -1,6 +1,6 @@
 /**
  * Preview launcher: spins up an in-memory MongoDB, seeds one user per role,
- * then serves the production build against it. For local previews/screenshots
+ * then runs the app against it. For local previews/screenshots
  * without provisioning a real database. Not used in production.
  */
 import { spawn } from "node:child_process";
@@ -15,7 +15,8 @@ process.env.TMP = "G:\\mongo-memory-server-cache\\tmp";
 
 async function main() {
   const { MongoMemoryServer } = await import("mongodb-memory-server");
-  const mem = await MongoMemoryServer.create();
+  // A cold mongod start on Windows can take well over the 10s default.
+  const mem = await MongoMemoryServer.create({ instance: { launchTimeout: 120_000 } });
   const uri = mem.getUri();
   process.env.MONGODB_URI = uri;
   process.env.MONGODB_DB = "trainygo_preview";
@@ -54,6 +55,30 @@ async function main() {
     },
   });
 
+  // Single-trainer mode: the preview coach is permanent and receives public
+  // sign-ups; one pending sign-up is seeded so the requests inbox and the
+  // client waiting screen have something to show.
+  const coachId = String(coach._id);
+  const { makeCoachPermanent, setPrimaryCoach } = await import("@/lib/services/coach-account");
+  const { ensureDefaultPackages, listPackages } = await import("@/lib/services/coaching-packages");
+  const { registerClientAccount } = await import("@/lib/services/client-signup");
+  await makeCoachPermanent(coachId);
+  await setPrimaryCoach(coachId);
+  await ensureDefaultPackages(coachId);
+  const [firstPackage] = await listPackages(coachId, { activeOnly: true });
+  await registerClientAccount({
+    name: "Youssef Adel",
+    username: "pending",
+    phone: "+201001234567",
+    password: "Client123!",
+    gender: "male",
+    age: 27,
+    height: 178,
+    weight: 84,
+    goal: "fat_loss",
+    packageId: firstPackage.id,
+  });
+
   await User.create({
     name: "Sara Mohamed",
     username: "client",
@@ -62,7 +87,7 @@ async function main() {
     status: "active",
     locale: "ar",
     mustChangePassword: true,
-    clientProfile: { coach: coach._id, clientCode: "TRG00001", active: true },
+    clientProfile: { coach: coach._id, clientCode: "TRG90001", active: true },
   });
 
   // Second client with a near-expiry subscription, for testing the countdown
@@ -77,7 +102,7 @@ async function main() {
     mustChangePassword: false,
     clientProfile: {
       coach: coach._id,
-      clientCode: "TRG00002",
+      clientCode: "TRG90002",
       active: true,
       subscriptionStartDate: new Date(now - 27 * 86_400_000),
       subscriptionEndDate: new Date(now + 2 * 86_400_000),
@@ -88,12 +113,14 @@ async function main() {
   console.log(`  admin  / Admin123!   (super_admin)`);
   console.log(`  coach  / Coach123!   (${coach.role})`);
   console.log(`  client / Client123!  (client)`);
-  console.log(`  client2 / Client123! (client, expiring in 2 days)\n`);
+  console.log(`  client2 / Client123! (client, expiring in 2 days)`);
+  console.log(`  pending / Client123! (client, signed up, waiting for activation)\n`);
   console.log(`MONGODB_URI=${uri}\n`);
 
-  // Serve the production build for fast, fully-compiled pages. Run `npm run
-  // build` first. (Swap to "dev" if you prefer hot-reload over speed.)
-  const child = spawn("npx", ["next", "start", "-p", "3000"], {
+  // Hot-reload dev server by default; PREVIEW_MODE=start serves the production
+  // build instead (run `npm run build` first).
+  const mode = process.env.PREVIEW_MODE === "start" ? "start" : "dev";
+  const child = spawn("npx", ["next", mode, "-p", "3000"], {
     env: { ...process.env, MONGODB_URI: uri, MONGODB_DB: "trainygo_preview" },
     stdio: "inherit",
     shell: true,

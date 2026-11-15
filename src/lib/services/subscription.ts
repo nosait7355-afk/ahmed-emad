@@ -65,13 +65,20 @@ export async function getClientAccessState(clientId: string): Promise<ClientAcce
   if (!Types.ObjectId.isValid(clientId)) return empty;
   const client = await User.findOne({ _id: clientId, role: "client" })
     .select(
-      "clientProfile.coach clientProfile.subscriptionStartDate clientProfile.subscriptionEndDate clientProfile.subscriptionFreezeStatus clientProfile.remainingDays",
+      "clientProfile.coach clientProfile.subscriptionStartDate clientProfile.subscriptionEndDate clientProfile.subscriptionFreezeStatus clientProfile.remainingDays clientProfile.signupStatus",
     )
     .lean();
   if (!client) return empty;
 
   const startDate = client.clientProfile?.subscriptionStartDate ?? null;
   const endDate = client.clientProfile?.subscriptionEndDate ?? null;
+
+  // Self-registered and not yet activated by the coach: no subscription yet.
+  // The client UI shows the payment/waiting screen instead of the app; this
+  // also blocks direct calls to client write actions.
+  if (client.clientProfile?.signupStatus === "pending") {
+    return { ...empty, frozen: true, frozenReason: "self" };
+  }
 
   // A coach-initiated freeze takes priority: the client is locked out and the
   // preserved days are surfaced so the app can show "remaining days: XX".

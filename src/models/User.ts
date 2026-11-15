@@ -114,6 +114,20 @@ export interface IClientProfile {
   subscriptionEndDate?: Date | null;
   active: boolean;
   /**
+   * Self sign-up state. "pending" = registered from the public site and
+   * waiting for the coach to confirm payment; "approved" = activated.
+   * Absent for clients the coach created directly (treated as approved).
+   */
+  signupStatus?: "pending" | "approved";
+  signupAt?: Date;
+  /** Snapshot of the package the client chose (kept even if the package is later edited or deleted). */
+  requestedPackage?: {
+    packageId?: Types.ObjectId;
+    name: { ar: string; en: string };
+    price: number;
+    months: number;
+  };
+  /**
    * Coach-initiated subscription freeze. "active" = running normally;
    * "frozen" = temporarily paused by the coach, preserving `remainingDays`
    * so the client resumes with the exact days they had left. This is NOT
@@ -254,6 +268,21 @@ const ClientProfileSchema = new Schema<IClientProfile>(
     subscriptionStartDate: { type: Date },
     subscriptionEndDate: { type: Date, default: null },
     active: { type: Boolean, default: true },
+    signupStatus: { type: String, enum: ["pending", "approved"] },
+    signupAt: { type: Date },
+    requestedPackage: {
+      type: new Schema(
+        {
+          packageId: { type: Schema.Types.ObjectId, ref: "CoachingPackage" },
+          name: {
+            type: new Schema({ ar: { type: String, default: "" }, en: { type: String, default: "" } }, { _id: false }),
+          },
+          price: { type: Number, default: 0 },
+          months: { type: Number, default: 1 },
+        },
+        { _id: false },
+      ),
+    },
     subscriptionFreezeStatus: { type: String, enum: CLIENT_FREEZE_STATUSES, default: "active" },
     freezeStartDate: { type: Date, default: null },
     freezeEndDate: { type: Date, default: null },
@@ -311,6 +340,8 @@ UserSchema.index({ "clientProfile.coach": 1, role: 1 });
 UserSchema.index({ "clientProfile.coach": 1, "clientProfile.subscriptionFreezeStatus": 1 });
 UserSchema.index({ "teamProfile.ownerCoachId": 1, role: 1 });
 UserSchema.index({ role: 1, status: 1 });
+// Coach "sign-up requests" inbox.
+UserSchema.index({ "clientProfile.coach": 1, "clientProfile.signupStatus": 1 });
 // Unique client code (only clients have one — sparse avoids null collisions)
 UserSchema.index(
   { "clientProfile.clientCode": 1 },

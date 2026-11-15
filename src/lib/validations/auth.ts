@@ -9,31 +9,6 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const coachRegisterSchema = z
-  .object({
-    name: z.string().min(2, "الاسم مطلوب").max(80),
-    brandName: z.string().max(80).optional().or(z.literal("")),
-    username: z
-      .string()
-      .min(3, "اسم المستخدم 3 أحرف على الأقل")
-      .max(30)
-      .regex(usernameRegex, "أحرف إنجليزية وأرقام و _ . فقط"),
-    email: z.string().email("بريد إلكتروني غير صالح"),
-    phone: z
-      .string()
-      .min(6, "رقم هاتف غير صالح")
-      .max(20)
-      .regex(/^[0-9+\-\s()]+$/, "رقم هاتف غير صالح"),
-    password: z.string().min(8, "كلمة المرور 8 أحرف على الأقل").max(72),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "كلمتا المرور غير متطابقتين",
-    path: ["confirmPassword"],
-  });
-
-export type CoachRegisterInput = z.infer<typeof coachRegisterSchema>;
-
 /** Super admin → create a permanent coach account. */
 export const adminCreateCoachSchema = z.object({
   name: z.string().trim().min(2, "الاسم مطلوب").max(80),

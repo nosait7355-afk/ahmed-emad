@@ -1,96 +1,87 @@
 "use server";
 
+import { clientRegisterSchema, type ClientRegisterInput } from "@/lib/validations/client-signup";
+import { registerClientAccount, ClientSignupError } from "@/lib/services/client-signup";
+import { getLocale } from "@/lib/i18n/server";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
-import { hashPassword } from "@/lib/auth/password";
-import {
-  coachRegisterSchema,
-  type CoachRegisterInput,
-} from "@/lib/validations/auth";
-import { TRIAL_DURATION_DAYS, TRIAL_MAX_CLIENTS, TRIAL_MAX_TEAM_MEMBERS } from "@/lib/constants";
-import { getLocale } from "@/lib/i18n/server";
 import { logError } from "@/lib/logging/error-log";
 import { rateLimit, RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getClientIp } from "@/lib/security/request-context";
 
 export type RegisterResult =
   | { ok: true }
-  | { ok: false; error: "USERNAME_TAKEN" | "EMAIL_TAKEN" | "VALIDATION" | "SERVER" | "RATE_LIMITED"; field?: string };
+  | {
+      ok: false;
+      error:
+        | "USERNAME_TAKEN"
+        | "EMAIL_TAKEN"
+        | "VALIDATION"
+        | "SERVER"
+        | "RATE_LIMITED"
+        | "SIGNUP_CLOSED"
+        | "PACKAGE_UNAVAILABLE";
+      field?: string;
+      message?: string;
+    };
 
 /**
- * Register a new coach. Starts a free trial (see TRIAL_DURATION_DAYS). Username & email must be
- * unique. The temporary record is created with status "trial".
+ * Public client sign-up (single-trainer mode). Creates a pending client
+ * attached to the primary coach; the coach activates it after payment.
+ *
+ * Coach accounts can no longer self-register — the super admin creates them.
  */
-export async function registerCoach(
-  input: CoachRegisterInput,
-): Promise<RegisterResult> {
-  // Rate limit account creation per IP (3 / hour) to curb trial-farming abuse.
+export async function registerClient(input: ClientRegisterInput): Promise<RegisterResult> {
+  // Rate limit account creation per IP (3 / hour) to curb spam sign-ups.
   const ip = await getClientIp();
   if (!rateLimit(RATE_LIMITS.register, ip).ok) {
     return { ok: false, error: "RATE_LIMITED" };
   }
 
-  const parsed = coachRegisterSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "VALIDATION" };
-
-  const { name, brandName, username, email, phone, password } = parsed.data;
-  const uname = username.toLowerCase().trim();
-  const mail = email.toLowerCase().trim();
-
-  await connectToDatabase();
-
-  if (await User.exists({ username: uname })) {
-    return { ok: false, error: "USERNAME_TAKEN", field: "username" };
+  const parsed = clientRegisterSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: "VALIDATION", field: issue?.path[0] as string | undefined, message: issue?.message };
   }
-  if (await User.exists({ email: mail })) {
-    return { ok: false, error: "EMAIL_TAKEN", field: "email" };
-  }
-
-  const now = new Date();
-  const trialEnd = new Date(now.getTime() + TRIAL_DURATION_DAYS * 86_400_000);
-  const passwordHash = await hashPassword(password);
-  const locale = await getLocale();
+  const data = parsed.data;
 
   try {
-    await User.create({
-      name,
-      username: uname,
-      email: mail,
-      phone,
-      passwordHash,
-      role: "coach",
-      status: "trial",
-      locale,
-      coachProfile: {
-        brandName: brandName || undefined,
-        trialStartDate: now,
-        trialEndDate: trialEnd,
-        subscriptionStatus: "trial",
-        subscriptionEndDate: trialEnd,
-        // Trial accounts are capped (see TRIAL_MAX_CLIENTS, no team members) so the free
-        // trial can't be used as unlimited production capacity.
-        maxClients: TRIAL_MAX_CLIENTS,
-        maxTeamMembers: TRIAL_MAX_TEAM_MEMBERS,
-      },
+    const { clientId } = await registerClientAccount({
+      name: data.name,
+      username: data.username,
+      email: data.email || undefined,
+      phone: data.phone,
+      password: data.password,
+      gender: data.gender,
+      age: data.age,
+      height: data.height,
+      weight: data.weight,
+      goal: data.goal,
+      packageId: data.packageId,
     });
+    const locale = await getLocale();
+    if (locale !== "ar") {
+      await connectToDatabase();
+      await User.updateOne({ _id: clientId }, { $set: { locale } });
+    }
   } catch (e: unknown) {
+    if (e instanceof ClientSignupError) {
+      const field = e.code === "USERNAME_TAKEN" ? "username" : e.code === "EMAIL_TAKEN" ? "email" : undefined;
+      return { ok: false, error: e.code === "NOT_FOUND" ? "SERVER" : e.code, field, message: e.message };
+    }
     const err = e as { code?: number; keyPattern?: Record<string, unknown> };
     if (err?.code === 11000) {
       const field = Object.keys(err.keyPattern ?? {})[0];
-      return {
-        ok: false,
-        error: field === "email" ? "EMAIL_TAKEN" : "USERNAME_TAKEN",
-        field,
-      };
+      return { ok: false, error: field === "email" ? "EMAIL_TAKEN" : "USERNAME_TAKEN", field };
     }
     const error = e instanceof Error ? e : new Error(String(e));
     await logError({
       type: "AUTH_ERROR",
       message: error.message,
       stack: error.stack,
-      email: mail,
+      email: data.email || undefined,
       route: "/register",
-      action: "registerCoach",
+      action: "registerClient",
     });
     return { ok: false, error: "SERVER" };
   }

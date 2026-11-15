@@ -24,6 +24,7 @@ import {
   Wrench,
   UserCog,
   RefreshCw,
+  Inbox,
   type LucideIcon,
 } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -66,6 +67,8 @@ export function getCoachNav(t: Dictionary, opts?: { branding?: boolean; teamCtx?
       label: g.clients,
       items: [
         { label: n.allClients, href: "/coach/clients", icon: Users, exact: true, permission: "canManageClients" },
+        { label: n.signupRequests, href: "/coach/requests", icon: Inbox, permission: "canManageClients" },
+        { label: n.packages, href: "/coach/packages", icon: Package, permission: "canManageSubscriptions" },
       ],
     },
     {

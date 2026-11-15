@@ -6,6 +6,8 @@ import { getEffectiveBrandForClient, FITXNET_DEFAULT_BRAND } from "@/lib/service
 import { hasBrandingAccessForClient } from "@/lib/services/feature-access";
 import { BrandProvider } from "@/components/providers/brand-provider";
 import type { NotificationItem } from "@/components/dashboard/notifications-menu";
+import { getSignupState } from "@/lib/services/client-signup";
+import { PendingActivation } from "@/components/client/pending-activation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const session = await requireRole("client");
@@ -21,6 +23,13 @@ export default async function ClientLayout({
   children: React.ReactNode;
 }) {
   const session = await requireRole("client");
+
+  // Self-registered and not yet activated: show the payment / waiting screen
+  // instead of the app, on every /client route.
+  const signup = await getSignupState(session.user.id);
+  if (signup?.pending) {
+    return <PendingActivation name={signup.name} username={signup.username} pkg={signup.package} />;
+  }
 
   const [raw, unread, hasAccess] = await Promise.all([
     listNotifications(session.user.id, 20),

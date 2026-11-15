@@ -24,6 +24,7 @@ export { NotificationDelivery } from "./NotificationDelivery";
 export { NotificationPreference } from "./NotificationPreference";
 export { ClientRequest } from "./ClientRequest";
 export { Settings } from "./Settings";
+export { CoachingPackage } from "./CoachingPackage";
 export { Counter } from "./Counter";
 export { SubscriptionFreezeHistory } from "./SubscriptionFreezeHistory";
 
