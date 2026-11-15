@@ -177,7 +177,8 @@ export function Landing({ packages }: { packages: PackageDTO[] }) {
                 key={src}
                 className={cn(
                   "relative overflow-hidden rounded-3xl border border-border/60 bg-muted",
-                  i === 0 ? "row-span-2 aspect-[2/3]" : "aspect-[4/3]",
+                  // Stacked tiles stretch to fill half the tall tile, so they stay close to square.
+                  i === 0 ? "row-span-2 aspect-[3/5]" : "min-h-0",
                 )}
               >
                 <Image
@@ -185,7 +186,7 @@ export function Landing({ packages }: { packages: PackageDTO[] }) {
                   alt={coachName}
                   fill
                   sizes="(min-width: 1024px) 25vw, 46vw"
-                  className="object-cover object-top"
+                  className={cn("object-cover", i === 0 ? "object-top" : "object-center")}
                 />
               </div>
             ))}
