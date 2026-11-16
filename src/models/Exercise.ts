@@ -79,6 +79,8 @@ ExerciseSchema.index(
 ExerciseSchema.index({ nameAr: "text", nameEn: "text" });
 // Visibility: system exercises + coach's own custom ones
 ExerciseSchema.index({ isSystemExercise: 1, createdByCoach: 1, category: 1 });
+// Matches the library's sort (system first, newest first) so lists don't sort in memory.
+ExerciseSchema.index({ isSystemExercise: -1, createdAt: -1 });
 
 export const Exercise: Model<IExercise> =
   (models.Exercise as Model<IExercise>) ||

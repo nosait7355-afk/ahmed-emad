@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Dumbbell } from "lucide-react";
 import { youtubeVideoId, youtubeMaxResThumbnail, youtubeHqThumbnail } from "@/lib/youtube";
+import { cloudinaryThumb, cloudinaryVideoPoster } from "@/lib/cloudinary-url";
 
 export interface ExerciseMediaSource {
   videoUrl?: string;
@@ -47,27 +48,43 @@ function YoutubePlayer({ videoId, alt }: { videoId: string; alt: string }) {
 /**
  * Simulates a smooth GIF from two static photos (start/end of the movement)
  * by cross-fading between them every 500ms.
+ *
+ * `hoverOnly` (list thumbnails): stays on the start photo and only animates
+ * while hovered, so a grid of cards doesn't run dozens of timers or download
+ * every end photo up front.
  */
 function MotionFadeImage({
   start,
   end,
   alt,
+  hoverOnly = false,
 }: {
   start: string;
   end?: string;
   alt: string;
+  hoverOnly?: boolean;
 }) {
   const [frame, setFrame] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [endLoaded, setEndLoaded] = useState(!hoverOnly);
   const canAnimate = !!end && end !== start;
+  const animating = canAnimate && (!hoverOnly || hovered);
 
   useEffect(() => {
-    if (!canAnimate) return;
+    if (!animating) {
+      setFrame(0);
+      return;
+    }
     const id = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 500);
     return () => clearInterval(id);
-  }, [canAnimate]);
+  }, [animating]);
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      className="relative h-full w-full"
+      onMouseEnter={hoverOnly ? () => { setHovered(true); setEndLoaded(true); } : undefined}
+      onMouseLeave={hoverOnly ? () => setHovered(false) : undefined}
+    >
       <Image
         src={start}
         alt={alt}
@@ -77,7 +94,7 @@ function MotionFadeImage({
         style={{ opacity: frame === 0 ? 1 : 0 }}
         unoptimized
       />
-      {canAnimate && (
+      {canAnimate && endLoaded && (
         <Image
           src={end!}
           alt={alt}
@@ -114,6 +131,25 @@ export function ExerciseMedia({
   iconClassName?: string;
   variant?: "thumbnail" | "player";
 }) {
+  const thumb = variant === "thumbnail";
+
+  // Lists: a still frame instead of an autoplaying video per card — a grid of
+  // 24 cards would otherwise download and play 24 videos at once.
+  if (media.videoUrl && thumb) {
+    const poster = cloudinaryVideoPoster(media.videoUrl);
+    return (
+      <div className={className}>
+        <div className="relative flex h-full w-full items-center justify-center bg-black">
+          {poster ? (
+            <Image src={poster} alt={alt} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" unoptimized />
+          ) : (
+            <video src={media.videoUrl} className="h-full w-full object-contain" preload="metadata" muted playsInline />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (media.videoUrl) {
     return (
       <div className={className}>
@@ -149,7 +185,13 @@ export function ExerciseMedia({
   if (start) {
     return (
       <div className={className}>
-        <MotionFadeImage key={`${start}|${media.imageUrlEnd ?? ""}`} start={start} end={media.imageUrlEnd} alt={alt} />
+        <MotionFadeImage
+          key={`${start}|${media.imageUrlEnd ?? ""}`}
+          start={thumb ? cloudinaryThumb(start) : start}
+          end={media.imageUrlEnd && (thumb ? cloudinaryThumb(media.imageUrlEnd) : media.imageUrlEnd)}
+          alt={alt}
+          hoverOnly={thumb}
+        />
       </div>
     );
   }

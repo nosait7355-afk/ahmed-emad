@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/db";
 import { Exercise } from "@/models/Exercise";
+import { invalidateExerciseCache } from "@/lib/services/exercises";
 import { validateBatch } from "./validation";
 import type { ImportResult, ImportSource, NormalizedExercise } from "./types";
 
@@ -78,6 +79,7 @@ export async function importExercises(
     else result.skipped++;
   }
 
+  if (result.created || result.updated) invalidateExerciseCache();
   return result;
 }
 

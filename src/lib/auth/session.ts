@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { homePathForRole } from "@/lib/permissions";
@@ -13,8 +14,11 @@ import type { CoachAreaCtx } from "@/lib/actions/guards";
  * matches the DB. Bumping `sessionVersion` (or suspending) therefore kills all
  * existing sessions on the very next request, without waiting for token expiry.
  * Fails open only on unexpected DB errors (never on an explicit revocation).
+ *
+ * Wrapped in React `cache()`: generateMetadata, the layout and the page all
+ * call this during one request — the DB check runs once per request, not 3×.
  */
-export async function requireSession() {
+export const requireSession = cache(async function requireSession() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -43,7 +47,7 @@ export async function requireSession() {
   }
 
   return session;
-}
+});
 
 /**
  * Require a session with a specific role. Wrong role → redirected to that

@@ -19,6 +19,7 @@ import { serialize } from "@/lib/serialize";
 import { PermissionError, computeEffectiveCoachStatus } from "@/lib/permissions";
 import type { AccountStatus, PaymentMethod } from "@/lib/constants";
 import { createNotification } from "./notifications";
+import { invalidateExerciseCache } from "./exercises";
 
 export async function getAdminStats() {
   await connectToDatabase();
@@ -307,5 +308,6 @@ export async function deleteCoach(coachId: string) {
     Notification.deleteMany({ recipient: cid }),
     User.deleteOne({ _id: cid }),
   ]);
+  invalidateExerciseCache();
   return true;
 }

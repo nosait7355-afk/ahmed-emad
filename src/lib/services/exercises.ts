@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Exercise } from "@/models/Exercise";
@@ -38,7 +39,40 @@ function visibilityFilter(scope: ExerciseScope, visibility?: "all" | "system" | 
   return { isSystemExercise: true };
 }
 
+/** Cache tag for every cached exercise-list result. */
+export const EXERCISES_CACHE_TAG = "exercises";
+
+/**
+ * Drops all cached exercise lists. Call after ANY write to the Exercise
+ * collection. Safe outside a Next.js request (seed/import scripts), where
+ * there is no cache to clear and revalidateTag would throw.
+ */
+export function invalidateExerciseCache() {
+  try {
+    revalidateTag(EXERCISES_CACHE_TAG);
+  } catch {
+    /* not inside a Next.js request — nothing cached to drop */
+  }
+}
+
+/**
+ * Exercise lists are cached on the server (keyed by scope + filters + page) —
+ * the library changes rarely and is shared by the whole academy. Writes clear
+ * the cache via invalidateExerciseCache(); the hourly revalidate is only a
+ * safety net for edits made directly in the database. Auth is checked by the
+ * callers before this, never inside the cache.
+ */
 export async function listExercises(scope: ExerciseScope, opts: ListOpts = {}) {
+  return cachedQueryExercises(scope, opts);
+}
+
+const cachedQueryExercises = unstable_cache(
+  (scope: ExerciseScope, opts: ListOpts) => queryExercises(scope, opts),
+  ["exercises:list"],
+  { tags: [EXERCISES_CACHE_TAG], revalidate: 3600 },
+);
+
+async function queryExercises(scope: ExerciseScope, opts: ListOpts) {
   await connectToDatabase();
   const page = Math.max(1, opts.page ?? 1);
   const limit = Math.min(60, Math.max(1, opts.limit ?? 24));
@@ -122,6 +156,7 @@ export async function createExercise(scope: ExerciseScope, data: ExerciseData) {
     isSystemExercise: isSystem,
     createdByCoach: isSystem ? null : new Types.ObjectId((scope as { coachId: string }).coachId),
   });
+  invalidateExerciseCache();
   return doc._id.toString();
 }
 
@@ -173,6 +208,7 @@ export async function updateExercise(id: string, scope: ExerciseScope, data: Exe
   ex.videoUrl = data.videoUrl || undefined;
   ex.videoPublicId = data.videoPublicId || undefined;
   await ex.save();
+  invalidateExerciseCache();
   return true;
 }
 
@@ -182,5 +218,6 @@ export async function deleteExercise(id: string, scope: ExerciseScope) {
   if (!ex) return false;
   await assertCanMutate(ex, scope);
   await ex.deleteOne();
+  invalidateExerciseCache();
   return true;
 }

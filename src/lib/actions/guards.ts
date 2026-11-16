@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { assertCoachCanWrite, PermissionError } from "@/lib/permissions";
 import { connectToDatabase } from "@/lib/db";
@@ -59,8 +60,11 @@ export interface CoachAreaCtx extends TeamPermissionContext {
  * Resolves either a coach or a team member into a single CoachAreaCtx.
  * Throws if the caller is neither, if a team member's owner coach can't be
  * found, or if the owner has suspended this team member's access.
+ *
+ * Wrapped in React `cache()` so the layout, generateMetadata and the page
+ * share one resolution per request instead of repeating the DB lookups.
  */
-export async function getCoachAreaCtx(): Promise<CoachAreaCtx> {
+export const getCoachAreaCtx = cache(async function getCoachAreaCtx(): Promise<CoachAreaCtx> {
   const session = await auth();
   if (!session?.user) throw new PermissionError("Forbidden", "NOT_AUTHENTICATED");
 
@@ -96,7 +100,7 @@ export async function getCoachAreaCtx(): Promise<CoachAreaCtx> {
   }
 
   throw new PermissionError("Forbidden", "NOT_COACH");
-}
+});
 
 /** CoachAreaCtx for WRITE actions: enforces the owner's subscription gate (expired/suspended owner ⇒ read-only for the whole team). */
 export async function getCoachAreaWriteCtx(): Promise<CoachAreaCtx> {
