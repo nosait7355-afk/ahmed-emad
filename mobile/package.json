@@ -1,0 +1,21 @@
+{
+  "name": "ahmed-emad-mobile",
+  "private": true,
+  "description": "Android shell for the Ahmed Emad coaching app. Loads the live site and opens on the login screen.",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "build:debug": "cap sync android && cd android && gradlew.bat assembleDebug",
+    "build:release": "cap sync android && cd android && gradlew.bat bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}

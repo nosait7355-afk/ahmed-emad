@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/providers";
+import { NativeAppBridge } from "@/components/providers/native-app-bridge";
 import { getLocale } from "@/lib/i18n/server";
 import { dirForLocale } from "@/lib/i18n/config";
 import { APP_URL } from "@/lib/app-url";
@@ -87,7 +88,10 @@ export default async function RootLayout({
       className={`${inter.variable} ${arabic.variable}`}
     >
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale}>
+          <NativeAppBridge />
+          {children}
+        </Providers>
       </body>
     </html>
   );

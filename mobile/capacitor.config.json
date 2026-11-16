@@ -1,0 +1,29 @@
+{
+  "appId": "com.ahmedemad.app",
+  "appName": "Ahmed Emad",
+  "webDir": "www",
+  "server": {
+    "url": "https://ahmed-emad-one.vercel.app/login",
+    "androidScheme": "https",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "appendUserAgent": "AhmedEmadApp/1.0",
+    "backgroundColor": "#050505",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#050505",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#050505",
+      "overlaysWebView": false
+    }
+  }
+}

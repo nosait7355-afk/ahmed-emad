@@ -14,6 +14,9 @@ type AppToken = {
 
 const PROTECTED_PREFIXES = ["/admin", "/coach", "/client"];
 
+/** Appended to the WebView user agent by the Android app (mobile/capacitor.config.json). */
+const APP_USER_AGENT = "AhmedEmadApp/";
+
 /**
  * Edge-safe auth config. Contains NO database or Node-only code so it can run
  * inside middleware. The real Credentials provider (which touches MongoDB) is
@@ -36,6 +39,17 @@ export const authConfig = {
       const isProtected = PROTECTED_PREFIXES.some(
         (p) => pathname === p || pathname.startsWith(`${p}/`),
       );
+
+      // Android app: no marketing pages. Anything outside the dashboards
+      // (/, /register, ...) goes to the user's home, or to /login when signed out.
+      const inApp = (request.headers.get("user-agent") ?? "").includes(APP_USER_AGENT);
+      const isAsset = /\.[a-z0-9]+$/i.test(pathname); // images, sw.js, manifest, ...
+      if (inApp && !isProtected && !isAsset && !pathname.startsWith("/api/")) {
+        const target = user ? homePathForRole(user.role) : "/login";
+        if (pathname !== target) return Response.redirect(new URL(target, request.nextUrl));
+        return true;
+      }
+
       if (!isProtected) return true;
 
       // Not signed in → bounce to /login (NextAuth handles the redirect).
