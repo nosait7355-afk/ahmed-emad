@@ -83,6 +83,7 @@ export function ExerciseLibrary({
   category,
   tab,
   canWrite,
+  canEditSystem = false,
 }: {
   role: "super_admin" | "coach";
   items: ExerciseItem[];
@@ -94,6 +95,8 @@ export function ExerciseLibrary({
   /** "system" | "mine" — coach-only split between the system library and the coach's own exercises. */
   tab?: "system" | "mine";
   canWrite: boolean;
+  /** Coach only: the primary coach may also edit/delete system exercises. */
+  canEditSystem?: boolean;
 }) {
   const { t, locale } = useI18n();
   const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
@@ -125,7 +128,7 @@ export function ExerciseLibrary({
   }, [q]);
 
   const canMutate = (e: ExerciseItem) =>
-    canWrite && (role === "coach" ? !e.isSystemExercise : e.isSystemExercise);
+    canWrite && (role === "coach" ? !e.isSystemExercise || canEditSystem : e.isSystemExercise);
 
   function openCreate() {
     setEditing(null);
@@ -136,9 +139,17 @@ export function ExerciseLibrary({
     setDialogOpen(true);
   }
   function onDelete(e: ExerciseItem) {
-    if (!window.confirm(`${t.common.delete}؟`)) return;
+    const name = locale === "ar" ? e.nameAr : e.nameEn || e.nameAr;
+    const warning = e.isSystemExercise
+      ? L(
+          `حذف «${name}» من المكتبة الأساسية نهائياً؟ البرامج اللي فيها التمرين ده هتفضل زي ما هي.`,
+          `Permanently delete "${name}" from the main library? Programs that already use it stay as they are.`,
+        )
+      : `${t.common.delete} «${name}»؟`;
+    if (!window.confirm(warning)) return;
     startTransition(async () => {
-      await deleteExerciseAction(e._id);
+      const res = await deleteExerciseAction(e._id);
+      if (!res.ok) window.alert(t.common.errorDescription);
       router.refresh();
     });
   }

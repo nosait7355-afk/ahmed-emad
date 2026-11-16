@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { Exercise } from "@/models/Exercise";
 import { serialize } from "@/lib/serialize";
 import { PermissionError } from "@/lib/permissions";
+import { getPrimaryCoachId } from "./coach-account";
 import type { ExerciseData } from "@/lib/validations/exercise";
 
 export type ExerciseScope =
@@ -124,24 +125,38 @@ export async function createExercise(scope: ExerciseScope, data: ExerciseData) {
   return doc._id.toString();
 }
 
-function assertCanMutate(
+/**
+ * Single-trainer mode: the site's primary coach owns the shared library, so
+ * they (and their team) may edit or delete system exercises too. Any other
+ * coach account is limited to its own custom exercises.
+ */
+export async function coachCanEditSystemExercises(coachId: string): Promise<boolean> {
+  return (await getPrimaryCoachId()) === coachId;
+}
+
+async function assertCanMutate(
   ex: { isSystemExercise: boolean; createdByCoach?: Types.ObjectId | null },
   scope: ExerciseScope,
 ) {
   if (scope.role === "super_admin") {
     if (!ex.isSystemExercise)
       throw new PermissionError("Cannot edit coach exercise", "FORBIDDEN");
-  } else {
-    if (ex.isSystemExercise || String(ex.createdByCoach) !== scope.coachId)
-      throw new PermissionError("Cannot edit system exercise", "FORBIDDEN");
+    return;
   }
+  if (ex.isSystemExercise) {
+    if (!(await coachCanEditSystemExercises(scope.coachId)))
+      throw new PermissionError("Cannot edit system exercise", "FORBIDDEN");
+    return;
+  }
+  if (String(ex.createdByCoach) !== scope.coachId)
+    throw new PermissionError("Cannot edit another coach's exercise", "FORBIDDEN");
 }
 
 export async function updateExercise(id: string, scope: ExerciseScope, data: ExerciseData) {
   await connectToDatabase();
   const ex = await Exercise.findById(id);
   if (!ex) return false;
-  assertCanMutate(ex, scope);
+  await assertCanMutate(ex, scope);
   ex.nameAr = data.nameAr;
   ex.nameEn = data.nameEn;
   ex.category = data.category;
@@ -165,7 +180,7 @@ export async function deleteExercise(id: string, scope: ExerciseScope) {
   await connectToDatabase();
   const ex = await Exercise.findById(id);
   if (!ex) return false;
-  assertCanMutate(ex, scope);
+  await assertCanMutate(ex, scope);
   await ex.deleteOne();
   return true;
 }
