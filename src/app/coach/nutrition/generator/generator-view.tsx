@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -60,6 +60,9 @@ import {
   saveGeneratedTemplateAction,
 } from "@/lib/actions/nutrition-generator";
 import { AI_NOTES_MAX } from "@/lib/ai/limits";
+import type { ChatSettings } from "@/lib/ai/nutrition-chat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NutritionChat } from "./nutrition-chat";
 
 interface GItem {
   food?: string | null;
@@ -77,7 +80,7 @@ interface GMeal {
   type: string;
   items: GItem[];
 }
-interface GPlan {
+export interface GPlan {
   meals: GMeal[];
   totals: { calories: number; protein: number; carbs: number; fat: number; fiber: number };
   target: { calories: number; protein: number; carbs: number; fat: number };
@@ -172,6 +175,32 @@ export function NutritionGeneratorView({
   const [error, setError] = useState<string | null>(null);
   const [generating, startGenerating] = useTransition();
   const [saveOpen, setSaveOpen] = useState(false);
+  const [tab, setTab] = useState<"generator" | "chat">("generator");
+  // A plan saved straight from the chat (may differ from the generator's plan).
+  const [savePlan, setSavePlan] = useState<GPlan | null>(null);
+  const [saveName, setSaveName] = useState("");
+
+  /** Load a chat plan into the generator so swap / undo / save work on it. */
+  function openFromChat(p: GPlan, pool: EngineFood[], s: ChatSettings) {
+    setPlan(p);
+    setSwapPool(pool);
+    setPast([]);
+    setError(null);
+    if ((GENERATOR_CALORIE_OPTIONS as readonly number[]).includes(s.calories)) setCalories(s.calories);
+    setGoal(s.goal);
+    setMealsPerDay(s.mealsPerDay);
+    setPPct(s.ratio ? String(Math.round(s.ratio.protein)) : "");
+    setCPct(s.ratio ? String(Math.round(s.ratio.carbs)) : "");
+    setFPct(s.ratio ? String(Math.round(s.ratio.fat)) : "");
+    setLastMode("engine");
+    setTab("generator");
+  }
+
+  function saveFromChat(p: GPlan, name: string) {
+    setSavePlan(p);
+    setSaveName(name);
+    setSaveOpen(true);
+  }
 
   // Swap state. The pool arrives once with the plan (or once per reopened
   // history entry) and every swap is computed from it in the browser — clicking
@@ -297,6 +326,27 @@ export function NutritionGeneratorView({
         )}
       />
 
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "generator" | "chat")}>
+      {aiEnabled && (
+        <TabsList className="mb-1">
+          <TabsTrigger value="generator" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            {L("المولّد", "Generator")}
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="gap-1.5">
+            <Bot className="h-3.5 w-3.5" />
+            {L("مساعد التغذية", "Nutrition assistant")}
+          </TabsTrigger>
+        </TabsList>
+      )}
+
+      {aiEnabled && (
+        <TabsContent value="chat" forceMount className="data-[state=inactive]:hidden">
+          <NutritionChat canWrite={canWrite} onOpenPlan={openFromChat} onSave={saveFromChat} />
+        </TabsContent>
+      )}
+
+      <TabsContent value="generator">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Left: inputs + result */}
         <div className="space-y-5">
@@ -479,12 +529,21 @@ export function NutritionGeneratorView({
           </Card>
         </div>
       </div>
+      </TabsContent>
+      </Tabs>
 
-      {plan && (
+      {(savePlan ?? plan) && (
         <SaveDialog
           open={saveOpen}
-          onOpenChange={setSaveOpen}
-          plan={plan}
+          onOpenChange={(v) => {
+            setSaveOpen(v);
+            if (!v) {
+              setSavePlan(null);
+              setSaveName("");
+            }
+          }}
+          plan={(savePlan ?? plan)!}
+          initialName={saveName}
           onSaved={(id) => router.push(`/coach/nutrition/templates/${id}`)}
         />
       )}
@@ -765,17 +824,26 @@ function SaveDialog({
   open,
   onOpenChange,
   plan,
+  initialName = "",
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   plan: GPlan;
+  /** Suggested name (e.g. from the chat assistant); fills whichever field matches its script. */
+  initialName?: string;
   onSaved: (id: string) => void;
 }) {
   const { t, locale } = useI18n();
   const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
   const [nameAr, setNameAr] = useState("");
   const [nameEn, setNameEn] = useState("");
+
+  useEffect(() => {
+    if (!open || !initialName) return;
+    if (/[؀-ۿ]/.test(initialName)) setNameAr(initialName);
+    else setNameEn(initialName);
+  }, [open, initialName]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 

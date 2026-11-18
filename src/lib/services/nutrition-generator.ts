@@ -9,6 +9,13 @@ import { dietAllows, generatePlan } from "@/lib/generator/engine";
 import type { EngineFood, GeneratorInput, GeneratedPlan } from "@/lib/generator/types";
 import type { GeneratorGoal } from "@/lib/constants";
 import { pickFoodsWithAi } from "@/lib/ai/nutrition-picker";
+import {
+  runNutritionChat,
+  type ChatCurrentPlan,
+  type ChatMessage,
+  type ChatTurnResult,
+} from "@/lib/ai/nutrition-chat";
+import { GeneratorError } from "@/lib/generator/types";
 
 export type GenScope =
   | { role: "super_admin" }
@@ -135,6 +142,26 @@ export async function aiGenerateAndRecord(
   const selection = await pickFoodsWithAi(pool, input, notes);
   const plan = generatePlan(pool, input, selection);
   return recordPlan(scope, input, pool, plan);
+}
+
+/**
+ * One turn of the nutrition assistant chat. Nothing is recorded to history —
+ * a conversation produces many intermediate plans; the coach saves the one
+ * they want as a template. Throws AiError / GeneratorError.
+ */
+export async function chatTurn(
+  scope: GenScope,
+  messages: ChatMessage[],
+  current: ChatCurrentPlan | null,
+): Promise<ChatTurnResult & { swapPool?: EngineFood[] }> {
+  const pool = await loadFoodPool(scope);
+  if (pool.length === 0) throw new GeneratorError("Food library is empty.", "EMPTY_LIBRARY");
+  const result = await runNutritionChat(pool, messages, current);
+  if (!result.plan || !result.settings) return result;
+  return {
+    ...result,
+    swapPool: swapPoolFor(pool, result.settings.goal, planFoodIds(result.plan)),
+  };
 }
 
 async function recordPlan(

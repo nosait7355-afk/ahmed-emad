@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { geminiJson, AiError } from "./gemini";
-import { dietAllows, perGram } from "@/lib/generator/engine";
+import { dietAllows } from "@/lib/generator/engine";
+import { FOOD_LINE_HEADER, formatFoodLine } from "./food-lines";
 import {
   DEFAULT_RATIOS,
   MEAL_COMPOSITION,
@@ -15,7 +16,7 @@ const SYSTEM = `You are a sports nutritionist helping a fitness coach build a on
 You may ONLY use foods from the numbered library you are given — refer to them by their number.
 Pick the foods for each meal; do NOT give grams or quantities (they are calculated afterwards).
 Rules:
-- 2 to 4 foods per meal; every main meal needs a real protein source.
+- 2 to 4 foods per meal; every main meal needs a real protein source and, unless low-carb, a real starch (rice, bread, oats, potatoes, pasta, beans). Honey, jam and sugar are small extras only, never the meal's carb source.
 - Respect each food's allowed meals when listed, and pick foods that make sense together (realistic Egyptian/Arab meals).
 - Prefer higher-priority foods (priority 5 = coach's favourite) and vary foods across the day.
 - Choose foods whose macros can reach the target split (e.g. lean proteins for high-protein goals, fewer starches for low-carb).
@@ -79,11 +80,7 @@ export async function pickFoodsWithAi(
     return `${i}: ${type} (suggested categories: ${cats.join(", ")})`;
   });
 
-  const foodLines = foods.map((f, i) => {
-    const pg = perGram(f);
-    const meals = f.meals.length ? f.meals.join("/") : "any";
-    return `${i}|${f.nameAr}|${f.nameEn}|${f.category}|meals:${meals}|priority:${f.priority}|per100g kcal ${r0(pg.calories * 100)} P ${r0(pg.protein * 100)} C ${r0(pg.carbs * 100)} F ${r0(pg.fat * 100)}`;
-  });
+  const foodLines = foods.map((f, i) => formatFoodLine(f, i));
 
   const prompt = [
     `Goal: ${input.goal}. Daily calories: ${input.calories}.`,
@@ -96,7 +93,7 @@ export async function pickFoodsWithAi(
     "Coach notes:",
     notes.trim() ? notes.trim().slice(0, AI_NOTES_MAX) : "(none)",
     "",
-    "Food library (number|Arabic|English|category|allowed meals|priority|macros):",
+    FOOD_LINE_HEADER,
     ...foodLines,
     "",
     `Return one entry per meal index (0 to ${sequence.length - 1}) with the food numbers you chose.`,

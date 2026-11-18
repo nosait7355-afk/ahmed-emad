@@ -8,7 +8,8 @@ import * as gen from "@/lib/services/nutrition-generator";
 import * as nt from "@/lib/services/nutrition-templates";
 import { GeneratorError } from "@/lib/generator/types";
 import { AiError } from "@/lib/ai/gemini";
-import { AI_NOTES_MAX } from "@/lib/ai/limits";
+import { AI_NOTES_MAX, CHAT_HISTORY_MAX, CHAT_MESSAGE_MAX } from "@/lib/ai/limits";
+import type { ChatCurrentPlan, ChatMessage, ChatTurnResult } from "@/lib/ai/nutrition-chat";
 import type { EngineFood, GeneratedPlan, MacroRatio } from "@/lib/generator/types";
 import {
   GENERATOR_GOALS,
@@ -114,30 +115,92 @@ export async function generateNutritionWithAiAction(
       return ok(result);
     } catch (e) {
       if (e instanceof GeneratorError) return friendlyError(e);
-      if (e instanceof AiError) {
-        console.error("[ai-generator]", e.code, e.message);
-        if (e.detail === "HTTP 400" || e.detail === "HTTP 401" || e.detail === "HTTP 403")
-          return fail(
-            `مفتاح الذكاء الاصطناعي مرفوض من جوجل (${e.detail}). راجع GEMINI_API_KEY في Vercel — بدون علامات تنصيص أو مسافات — ثم أعد الـ Deploy.`,
-            "AI_BAD_KEY",
-          );
-        if (e.detail === "timeout")
-          return fail(
-            "الذكاء الاصطناعي مشغول جداً الآن ولم يرد في الوقت المحدد. جرّب مرة أخرى بعد قليل أو استخدم التوليد العادي.",
-            "AI_TIMEOUT",
-          );
-        switch (e.code) {
-          case "NOT_CONFIGURED":
-            return fail("الذكاء الاصطناعي غير مفعّل. أضف GEMINI_API_KEY في إعدادات السيرفر.", "AI_NOT_CONFIGURED");
-          case "RATE_LIMITED":
-            return fail("تم الوصول للحد المجاني للذكاء الاصطناعي مؤقتاً. جرّب بعد دقيقة أو استخدم التوليد العادي.", "AI_RATE_LIMITED");
-          default:
-            return fail(
-              `تعذّر الاتصال بالذكاء الاصطناعي (${e.detail}). جرّب مرة أخرى أو استخدم التوليد العادي.`,
-              "AI_FAILED",
-            );
-        }
-      }
+      if (e instanceof AiError) return aiFailure(e);
+      throw e;
+    }
+  });
+}
+
+/** Map an AI failure to a coach-facing Arabic message (no secrets included). */
+function aiFailure(e: AiError): ReturnType<typeof fail> {
+  console.error("[ai-generator]", e.code, e.message);
+  if (e.detail === "HTTP 400" || e.detail === "HTTP 401" || e.detail === "HTTP 403")
+    return fail(
+      `مفتاح الذكاء الاصطناعي مرفوض من جوجل (${e.detail}). راجع GEMINI_API_KEY في Vercel — بدون علامات تنصيص أو مسافات — ثم أعد الـ Deploy.`,
+      "AI_BAD_KEY",
+    );
+  if (e.detail === "timeout")
+    return fail(
+      "الذكاء الاصطناعي مشغول جداً الآن ولم يرد في الوقت المحدد. جرّب مرة أخرى بعد قليل.",
+      "AI_TIMEOUT",
+    );
+  switch (e.code) {
+    case "NOT_CONFIGURED":
+      return fail("الذكاء الاصطناعي غير مفعّل. أضف GEMINI_API_KEY في إعدادات السيرفر.", "AI_NOT_CONFIGURED");
+    case "RATE_LIMITED":
+      return fail("تم الوصول للحد المجاني للذكاء الاصطناعي مؤقتاً. جرّب بعد دقيقة.", "AI_RATE_LIMITED");
+    default:
+      return fail(`تعذّر الاتصال بالذكاء الاصطناعي (${e.detail}). جرّب مرة أخرى.`, "AI_FAILED");
+  }
+}
+
+export interface NutritionChatInput {
+  messages: ChatMessage[];
+  current: ChatCurrentPlan | null;
+}
+
+/**
+ * One turn of the nutrition assistant chat. The client keeps the conversation
+ * and the plan on screen and sends both each turn; the server keeps no state.
+ */
+export async function nutritionChatAction(
+  input: NutritionChatInput,
+): Promise<ActionResult<ChatTurnResult & { swapPool?: EngineFood[] }>> {
+  return runAction(async () => {
+    const messages: ChatMessage[] = (Array.isArray(input.messages) ? input.messages : [])
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.text === "string")
+      .slice(-CHAT_HISTORY_MAX)
+      .map((m) => ({ role: m.role, text: m.text.slice(0, CHAT_MESSAGE_MAX) }));
+    if (messages.length === 0 || messages[messages.length - 1].role !== "user")
+      return fail("اكتب رسالتك أولاً", "VALIDATION");
+
+    // The plan comes back from the browser — keep only the fields the AI reads.
+    const c = input.current;
+    const current: ChatCurrentPlan | null =
+      c && c.settings && GENERATOR_GOALS.includes(c.settings.goal) && Array.isArray(c.meals)
+        ? {
+            settings: {
+              calories: Number(c.settings.calories) || 2000,
+              goal: c.settings.goal,
+              mealsPerDay: Number(c.settings.mealsPerDay) || 4,
+              ratio:
+                c.settings.ratio &&
+                [c.settings.ratio.protein, c.settings.ratio.carbs, c.settings.ratio.fat].every(
+                  (n) => Number.isFinite(n) && n > 0,
+                )
+                  ? {
+                      protein: c.settings.ratio.protein,
+                      carbs: c.settings.ratio.carbs,
+                      fat: c.settings.ratio.fat,
+                    }
+                  : undefined,
+            },
+            meals: c.meals.slice(0, 6).map((m) => ({
+              type: String(m.type),
+              items: (Array.isArray(m.items) ? m.items : []).slice(0, 8).map((it) => ({
+                food: typeof it.food === "string" ? it.food : null,
+                quantity: Number(it.quantity) || 0,
+              })),
+            })),
+          }
+        : null;
+
+    const scope = await resolveScope();
+    try {
+      return ok(await gen.chatTurn(scope, messages, current));
+    } catch (e) {
+      if (e instanceof GeneratorError) return friendlyError(e);
+      if (e instanceof AiError) return aiFailure(e);
       throw e;
     }
   });

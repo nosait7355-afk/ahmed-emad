@@ -188,6 +188,12 @@ export function generatePlan(
    * selection rules. Grams are always solved here, never taken from the caller.
    */
   selection?: string[][],
+  /**
+   * Optional fixed portions, keyed `${mealIndex}:${foodId}` → grams. Locked
+   * foods keep exactly these grams and only the rest are solved — so editing
+   * one meal doesn't reshuffle portions in the meals the coach left alone.
+   */
+  locks?: Record<string, number>,
 ): GeneratedPlan {
   if (pool.length === 0) {
     throw new GeneratorError("Food library is empty.", "EMPTY_LIBRARY");
@@ -280,6 +286,18 @@ export function generatePlan(
     if (chosenAll.length === 0) return [] as number[];
     const solverFoods: SolverFood[] = chosenAll.map((c) => {
       const pg = perGram(c.food);
+      const locked = locks?.[`${c.mealIndex}:${c.food.id}`];
+      if (locked != null && locked > 0) {
+        return {
+          calories: pg.calories,
+          protein: pg.protein,
+          carbs: pg.carbs,
+          fat: pg.fat,
+          minGram: locked,
+          maxGram: locked,
+          startGram: locked,
+        };
+      }
       const b = categoryGramBounds(c.food.category);
       // Seed each food near its share of the day's calories so the descent
       // starts from a balanced portion rather than all-or-nothing.

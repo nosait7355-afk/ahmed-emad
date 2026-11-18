@@ -7,10 +7,11 @@
  */
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-// An alias Google keeps pointed at the current Flash model, so the app doesn't
-// break when a pinned version is retired (gemini-2.5-flash already was).
-const DEFAULT_MODEL = "gemini-flash-latest";
-const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+// Flash-Lite first: on the free tier it answers in a few seconds and has a far
+// larger daily quota than full Flash, which ran out (HTTP 429) after a handful
+// of library-sized prompts. The "-latest" aliases survive version retirements.
+const DEFAULT_MODEL = "gemini-3.1-flash-lite";
+const FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-3.5-flash"];
 /** Per-model attempt timeout. */
 const TIMEOUT_MS = 25_000;
 /** Whole call, all fallbacks included — keep below the page's maxDuration (60s). */
@@ -53,6 +54,8 @@ export async function geminiJson(opts: {
   prompt: string;
   responseSchema: Record<string, unknown>;
   temperature?: number;
+  /** Earlier turns of a conversation; `prompt` is sent as the newest user turn. */
+  history?: { role: "user" | "model"; text: string }[];
 }): Promise<unknown> {
   const key = readKey();
   if (!key) throw new AiError("GEMINI_API_KEY is not set", "NOT_CONFIGURED");
@@ -94,7 +97,10 @@ async function callModel(
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: opts.system }] },
-        contents: [{ role: "user", parts: [{ text: opts.prompt }] }],
+        contents: [
+          ...(opts.history ?? []).map((h) => ({ role: h.role, parts: [{ text: h.text }] })),
+          { role: "user", parts: [{ text: opts.prompt }] },
+        ],
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: opts.responseSchema,
