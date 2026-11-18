@@ -8,6 +8,7 @@ import { getFoodOverrides, type FoodOverride } from "@/lib/services/foods";
 import { dietAllows, generatePlan } from "@/lib/generator/engine";
 import type { EngineFood, GeneratorInput, GeneratedPlan } from "@/lib/generator/types";
 import type { GeneratorGoal } from "@/lib/constants";
+import { pickFoodsWithAi } from "@/lib/ai/nutrition-picker";
 
 export type GenScope =
   | { role: "super_admin" }
@@ -116,6 +117,32 @@ export async function generateAndRecord(
 ): Promise<{ plan: GeneratedPlan; historyId: string | null; swapPool: EngineFood[] }> {
   const pool = await loadFoodPool(scope);
   const plan = generatePlan(pool, input);
+  return recordPlan(scope, input, pool, plan);
+}
+
+/**
+ * Same as generateAndRecord, but an AI picks which library foods go in each
+ * meal (following the coach's free-text notes). The engine still solves every
+ * gram, so the macros stay exact. Throws AiError when the AI is unavailable.
+ */
+export async function aiGenerateAndRecord(
+  scope: GenScope,
+  input: GeneratorInput,
+  notes: string,
+): Promise<{ plan: GeneratedPlan; historyId: string | null; swapPool: EngineFood[] }> {
+  const pool = await loadFoodPool(scope);
+  if (pool.length === 0) return recordPlan(scope, input, pool, generatePlan(pool, input));
+  const selection = await pickFoodsWithAi(pool, input, notes);
+  const plan = generatePlan(pool, input, selection);
+  return recordPlan(scope, input, pool, plan);
+}
+
+async function recordPlan(
+  scope: GenScope,
+  input: GeneratorInput,
+  pool: EngineFood[],
+  plan: GeneratedPlan,
+): Promise<{ plan: GeneratedPlan; historyId: string | null; swapPool: EngineFood[] }> {
   const swapPool = swapPoolFor(pool, input.goal, planFoodIds(plan));
 
   let historyId: string | null = null;

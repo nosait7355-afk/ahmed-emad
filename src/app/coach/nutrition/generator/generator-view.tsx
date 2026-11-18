@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Undo2,
+  Bot,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,9 +55,11 @@ import type { EngineFood } from "@/lib/generator/types";
 import { buildFoodSwapOptions, type FoodSwapOption } from "@/lib/swap/food";
 import {
   generateNutritionAction,
+  generateNutritionWithAiAction,
   getSwapPoolAction,
   saveGeneratedTemplateAction,
 } from "@/lib/actions/nutrition-generator";
+import { AI_NOTES_MAX } from "@/lib/ai/limits";
 
 interface GItem {
   food?: string | null;
@@ -144,9 +147,11 @@ function withRecomputedTotals(plan: GPlan): GPlan {
 export function NutritionGeneratorView({
   history,
   canWrite,
+  aiEnabled,
 }: {
   history: HistoryEntry[];
   canWrite: boolean;
+  aiEnabled: boolean;
 }) {
   const { t, locale } = useI18n();
   const L = (ar: string, en: string) => (locale === "ar" ? ar : en);
@@ -159,6 +164,9 @@ export function NutritionGeneratorView({
   const [cPct, setCPct] = useState("");
   const [fPct, setFPct] = useState("");
   const [seed, setSeed] = useState(0);
+  const [aiNotes, setAiNotes] = useState("");
+  // Which generator produced the plan on screen, so "Regenerate" repeats it.
+  const [lastMode, setLastMode] = useState<"engine" | "ai">("engine");
 
   const [plan, setPlan] = useState<GPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -180,21 +188,20 @@ export function NutritionGeneratorView({
     return undefined;
   }, [pPct, cPct, fPct]);
 
-  function run(nextSeed: number) {
+  function run(nextSeed: number, mode: "engine" | "ai" = "engine") {
     setError(null);
     startGenerating(async () => {
-      const res = await generateNutritionAction({
-        calories,
-        goal,
-        mealsPerDay,
-        ratio: customRatio,
-        seed: nextSeed,
-      });
+      const base = { calories, goal, mealsPerDay, ratio: customRatio, seed: nextSeed };
+      const res =
+        mode === "ai"
+          ? await generateNutritionWithAiAction({ ...base, notes: aiNotes })
+          : await generateNutritionAction(base);
       if (res.ok && res.data) {
         setPlan(res.data.plan as GPlan);
         setSwapPool(res.data.swapPool as EngineFood[]);
         setPast([]);
         setSeed(nextSeed);
+        setLastMode(mode);
       } else if (!res.ok) {
         setError(res.error);
         setPlan(null);
@@ -357,13 +364,44 @@ export function NutritionGeneratorView({
                 </div>
               </div>
 
+              {aiEnabled && (
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Bot className="h-3.5 w-3.5 text-primary" />
+                    {L(
+                      "ملاحظات للذكاء الاصطناعي (اختياري) — مثلاً: لا يحب السمك، يفضل الشوفان في الفطار، حساسية لاكتوز",
+                      "Notes for the AI (optional) — e.g. dislikes fish, prefers oats at breakfast, lactose intolerant",
+                    )}
+                  </Label>
+                  <textarea
+                    value={aiNotes}
+                    onChange={(e) => setAiNotes(e.target.value.slice(0, AI_NOTES_MAX))}
+                    rows={2}
+                    maxLength={AI_NOTES_MAX}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {L(
+                      "الذكاء الاصطناعي يختار الأكلات من مكتبتك فقط، والجرامات والماكروز يحسبها النظام بدقة. لا تكتب اسم العميل أو بياناته.",
+                      "The AI only picks foods from your library; grams and macros are calculated exactly by the system. Don't include client names or details.",
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => run(0)} disabled={generating || !canWrite} className="gap-2">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   {L("توليد القالب", "Generate template")}
                 </Button>
+                {aiEnabled && (
+                  <Button variant="secondary" onClick={() => run(0, "ai")} disabled={generating || !canWrite} className="gap-2">
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+                    {L("توليد بالذكاء الاصطناعي", "Generate with AI")}
+                  </Button>
+                )}
                 {plan && (
-                  <Button variant="outline" onClick={() => run(seed + 1)} disabled={generating || !canWrite} className="gap-2">
+                  <Button variant="outline" onClick={() => run(seed + 1, lastMode)} disabled={generating || !canWrite} className="gap-2">
                     <RefreshCw className="h-4 w-4" />
                     {L("إعادة التوليد", "Regenerate")}
                   </Button>

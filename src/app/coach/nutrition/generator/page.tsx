@@ -2,9 +2,13 @@ import { requireCoachArea } from "@/lib/auth/session";
 import { canAccessTemplates } from "@/lib/permissions/team";
 import { coachCanWrite } from "@/lib/permissions";
 import { listGenerations } from "@/lib/services/nutrition-generator";
+import { isAiConfigured } from "@/lib/ai/gemini";
 import { NutritionGeneratorView, type HistoryEntry } from "./generator-view";
 
 export const dynamic = "force-dynamic";
+// Server actions run in this page's function on Vercel; the AI generator can
+// take up to ~50s on a busy free tier (see TOTAL_BUDGET_MS in lib/ai/gemini).
+export const maxDuration = 60;
 
 export default async function NutritionGeneratorPage() {
   const ctx = await requireCoachArea(canAccessTemplates);
@@ -24,6 +28,10 @@ export default async function NutritionGeneratorPage() {
   }));
 
   return (
-    <NutritionGeneratorView history={history} canWrite={coachCanWrite(ctx.status)} />
+    <NutritionGeneratorView
+      history={history}
+      canWrite={coachCanWrite(ctx.status)}
+      aiEnabled={isAiConfigured()}
+    />
   );
 }

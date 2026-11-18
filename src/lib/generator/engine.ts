@@ -181,6 +181,13 @@ function withinTolerance(
 export function generatePlan(
   pool: EngineFood[],
   input: GeneratorInput,
+  /**
+   * Optional pre-chosen food ids per meal (index-aligned with the day's meal
+   * sequence) — e.g. picked by an AI. Unknown or diet-disallowed ids are
+   * dropped, and a meal left with no valid pick falls back to the engine's own
+   * selection rules. Grams are always solved here, never taken from the caller.
+   */
+  selection?: string[][],
 ): GeneratedPlan {
   if (pool.length === 0) {
     throw new GeneratorError("Food library is empty.", "EMPTY_LIBRARY");
@@ -224,10 +231,30 @@ export function generatePlan(
   const chosenAll: Chosen[] = [];
   let snackIndex = 0;
 
+  const allowedById = new Map<string, EngineFood>();
+  for (const list of pools.values()) for (const f of list) allowedById.set(f.id, f);
+
   sequence.forEach((type, mealIndex) => {
     const share = MEAL_WEIGHT[type] / weightSum;
     const cats = categoriesForMeal(type, type === "snack" ? snackIndex++ : 0);
     const picked: EngineFood[] = [];
+
+    const preset = (selection?.[mealIndex] ?? [])
+      .map((id) => allowedById.get(id))
+      .filter((f): f is EngineFood => !!f)
+      .filter((f, i, arr) => arr.findIndex((x) => x.id === f.id) === i);
+    if (preset.length > 0) {
+      for (const food of preset) {
+        picked.push(food);
+        ctx.usedToday.add(food.id);
+        ctx.lastByCat.set(food.category, food.id);
+      }
+      for (const food of picked) {
+        chosenAll.push({ food, mealIndex, startShare: share / picked.length });
+      }
+      return;
+    }
+
     cats.forEach((cat, slot) => {
       const food = pickFood(cat, pools, ctx, mealIndex + slot, type);
       if (!food) return;

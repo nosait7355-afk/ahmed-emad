@@ -7,6 +7,8 @@ import { runAction, ok, fail, type ActionResult } from "./result";
 import * as gen from "@/lib/services/nutrition-generator";
 import * as nt from "@/lib/services/nutrition-templates";
 import { GeneratorError } from "@/lib/generator/types";
+import { AiError } from "@/lib/ai/gemini";
+import { AI_NOTES_MAX } from "@/lib/ai/limits";
 import type { EngineFood, GeneratedPlan, MacroRatio } from "@/lib/generator/types";
 import {
   GENERATOR_GOALS,
@@ -72,6 +74,57 @@ export async function generateNutritionAction(
       return ok(result);
     } catch (e) {
       if (e instanceof GeneratorError) return friendlyError(e);
+      throw e;
+    }
+  });
+}
+
+/**
+ * AI-assisted generation: the AI chooses foods from the coach's library per
+ * meal, guided by the coach's notes; the engine computes all grams/macros.
+ */
+export async function generateNutritionWithAiAction(
+  input: GenerateInput & { notes?: string },
+): Promise<
+  ActionResult<{ plan: GeneratedPlan; historyId: string | null; swapPool: EngineFood[] }>
+> {
+  return runAction(async () => {
+    if (!GENERATOR_CALORIE_OPTIONS.includes(input.calories as never))
+      return fail("سعرات غير صالحة", "VALIDATION");
+    if (!GENERATOR_GOALS.includes(input.goal))
+      return fail("هدف غير صالح", "VALIDATION");
+    if (!GENERATOR_MEALS_OPTIONS.includes(input.mealsPerDay as never))
+      return fail("عدد وجبات غير صالح", "VALIDATION");
+    const notes = String(input.notes ?? "").slice(0, AI_NOTES_MAX);
+
+    const scope = await resolveScope();
+    try {
+      const result = await gen.aiGenerateAndRecord(
+        scope,
+        {
+          calories: input.calories,
+          goal: input.goal,
+          mealsPerDay: input.mealsPerDay,
+          ratio: input.ratio,
+          seed: input.seed,
+        },
+        notes,
+      );
+      revalidatePath("/coach/nutrition/generator");
+      return ok(result);
+    } catch (e) {
+      if (e instanceof GeneratorError) return friendlyError(e);
+      if (e instanceof AiError) {
+        console.error("[ai-generator]", e.code, e.message);
+        switch (e.code) {
+          case "NOT_CONFIGURED":
+            return fail("الذكاء الاصطناعي غير مفعّل. أضف GEMINI_API_KEY في إعدادات السيرفر.", "AI_NOT_CONFIGURED");
+          case "RATE_LIMITED":
+            return fail("تم الوصول للحد المجاني للذكاء الاصطناعي مؤقتاً. جرّب بعد دقيقة أو استخدم التوليد العادي.", "AI_RATE_LIMITED");
+          default:
+            return fail("تعذّر الاتصال بالذكاء الاصطناعي. جرّب مرة أخرى أو استخدم التوليد العادي.", "AI_FAILED");
+        }
+      }
       throw e;
     }
   });
