@@ -116,13 +116,26 @@ export async function generateNutritionWithAiAction(
       if (e instanceof GeneratorError) return friendlyError(e);
       if (e instanceof AiError) {
         console.error("[ai-generator]", e.code, e.message);
+        if (e.detail === "HTTP 400" || e.detail === "HTTP 401" || e.detail === "HTTP 403")
+          return fail(
+            `مفتاح الذكاء الاصطناعي مرفوض من جوجل (${e.detail}). راجع GEMINI_API_KEY في Vercel — بدون علامات تنصيص أو مسافات — ثم أعد الـ Deploy.`,
+            "AI_BAD_KEY",
+          );
+        if (e.detail === "timeout")
+          return fail(
+            "الذكاء الاصطناعي مشغول جداً الآن ولم يرد في الوقت المحدد. جرّب مرة أخرى بعد قليل أو استخدم التوليد العادي.",
+            "AI_TIMEOUT",
+          );
         switch (e.code) {
           case "NOT_CONFIGURED":
             return fail("الذكاء الاصطناعي غير مفعّل. أضف GEMINI_API_KEY في إعدادات السيرفر.", "AI_NOT_CONFIGURED");
           case "RATE_LIMITED":
             return fail("تم الوصول للحد المجاني للذكاء الاصطناعي مؤقتاً. جرّب بعد دقيقة أو استخدم التوليد العادي.", "AI_RATE_LIMITED");
           default:
-            return fail("تعذّر الاتصال بالذكاء الاصطناعي. جرّب مرة أخرى أو استخدم التوليد العادي.", "AI_FAILED");
+            return fail(
+              `تعذّر الاتصال بالذكاء الاصطناعي (${e.detail}). جرّب مرة أخرى أو استخدم التوليد العادي.`,
+              "AI_FAILED",
+            );
         }
       }
       throw e;

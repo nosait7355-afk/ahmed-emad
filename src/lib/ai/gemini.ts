@@ -20,16 +20,27 @@ export class AiError extends Error {
   code: "NOT_CONFIGURED" | "RATE_LIMITED" | "UPSTREAM" | "BAD_RESPONSE";
   /** Worth trying again (overload, timeout, per-minute limit). */
   retryable: boolean;
-  constructor(message: string, code: AiError["code"], retryable = false) {
+  /** Short, secret-free reason safe to show the coach (e.g. "HTTP 400", "timeout"). */
+  detail: string;
+  constructor(message: string, code: AiError["code"], retryable = false, detail: string = code) {
     super(message);
     this.name = "AiError";
     this.code = code;
     this.retryable = retryable;
+    this.detail = detail;
   }
 }
 
+/**
+ * The key as pasted into the hosting dashboard often carries quotes or a
+ * trailing newline/space, which Google rejects as an invalid key.
+ */
+function readKey(): string {
+  return (process.env.GEMINI_API_KEY ?? "").trim().replace(/^["']+|["']+$/g, "").trim();
+}
+
 export function isAiConfigured(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+  return readKey().length > 0;
 }
 
 /**
@@ -43,9 +54,9 @@ export async function geminiJson(opts: {
   responseSchema: Record<string, unknown>;
   temperature?: number;
 }): Promise<unknown> {
-  const key = process.env.GEMINI_API_KEY;
+  const key = readKey();
   if (!key) throw new AiError("GEMINI_API_KEY is not set", "NOT_CONFIGURED");
-  const primary = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const primary = (process.env.GEMINI_MODEL ?? "").trim() || DEFAULT_MODEL;
   // Free-tier models often answer 503 "high demand". Retrying the same model
   // rarely helps, so move to a different one; a retired fallback (404) is
   // skipped the same way.
@@ -62,11 +73,12 @@ export async function geminiJson(opts: {
       return await callModel(key, attempts[i], opts, Math.min(TIMEOUT_MS, remaining));
     } catch (e) {
       if (!(e instanceof AiError) || !e.retryable) throw e;
+      console.warn("[gemini] attempt failed:", attempts[i], e.detail);
       lastErr = e;
       if (i < attempts.length - 1) await new Promise((r) => setTimeout(r, 500));
     }
   }
-  throw lastErr ?? new AiError("Gemini unavailable", "UPSTREAM");
+  throw lastErr ?? new AiError("Gemini unavailable", "UPSTREAM", false, "timeout");
 }
 
 async function callModel(
@@ -93,16 +105,25 @@ async function callModel(
       cache: "no-store",
     });
   } catch (e) {
-    throw new AiError(`Gemini request failed: ${(e as Error).message}`, "UPSTREAM", true);
+    const err = e as Error;
+    const timedOut = err.name === "TimeoutError" || err.name === "AbortError";
+    throw new AiError(
+      `Gemini ${model} request failed: ${err.message}`,
+      "UPSTREAM",
+      true,
+      timedOut ? "timeout" : "network",
+    );
   }
 
-  if (res.status === 429) throw new AiError("Gemini rate limit reached", "RATE_LIMITED", true);
+  if (res.status === 429)
+    throw new AiError(`Gemini ${model} rate limit`, "RATE_LIMITED", true, "HTTP 429");
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new AiError(
       `Gemini ${model} HTTP ${res.status}: ${body.slice(0, 300)}`,
       "UPSTREAM",
       res.status >= 500 || res.status === 404,
+      `HTTP ${res.status}`,
     );
   }
 
@@ -113,6 +134,7 @@ async function callModel(
   try {
     return JSON.parse(text);
   } catch {
-    throw new AiError("Gemini returned non-JSON output", "BAD_RESPONSE");
+    // Another model may answer cleanly — move on rather than give up.
+    throw new AiError(`Gemini ${model} returned non-JSON output`, "BAD_RESPONSE", true, "bad JSON");
   }
 }
