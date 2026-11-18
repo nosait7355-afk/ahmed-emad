@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { geminiJson, AiError } from "./gemini";
 import { generatePlan } from "@/lib/generator/engine";
-import { FOOD_LINE_HEADER, formatFoodLine } from "./food-lines";
+import { CLIENT_CONTEXT, FOOD_LINE_HEADER, formatFoodLine } from "./food-lines";
 import { MEALS_PER_DAY_SEQUENCE } from "@/lib/generator/config";
 import { GENERATOR_GOALS, type GeneratorGoal } from "@/lib/constants";
 import type { EngineFood, GeneratedPlan, MacroRatio } from "@/lib/generator/types";
@@ -222,6 +222,8 @@ export async function runNutritionChat(
     "",
     "CURRENT PLAN ON SCREEN:",
     currentBlock,
+    "",
+    CLIENT_CONTEXT,
     "",
     FOOD_LINE_HEADER,
     ...foodLines,

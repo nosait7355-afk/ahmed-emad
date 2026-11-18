@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { geminiJson, AiError } from "./gemini";
 import { dietAllows } from "@/lib/generator/engine";
-import { FOOD_LINE_HEADER, formatFoodLine } from "./food-lines";
+import { CLIENT_CONTEXT, FOOD_LINE_HEADER, formatFoodLine } from "./food-lines";
 import {
   DEFAULT_RATIOS,
   MEAL_COMPOSITION,
@@ -92,6 +92,8 @@ export async function pickFoodsWithAi(
     "",
     "Coach notes:",
     notes.trim() ? notes.trim().slice(0, AI_NOTES_MAX) : "(none)",
+    "",
+    CLIENT_CONTEXT,
     "",
     FOOD_LINE_HEADER,
     ...foodLines,
