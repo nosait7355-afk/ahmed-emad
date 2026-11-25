@@ -202,7 +202,7 @@ export function ExerciseLibrary({
           <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
             {items.map((e) => (
               <Card key={e._id} className="overflow-hidden transition-shadow hover:shadow-md">
-                <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-muted">
+                <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted">
                   <button
                     type="button"
                     onClick={() => setViewing(e)}
