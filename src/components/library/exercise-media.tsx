@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Dumbbell } from "lucide-react";
 import { youtubeVideoId, youtubeMaxResThumbnail, youtubeHqThumbnail } from "@/lib/youtube";
@@ -109,6 +109,52 @@ function MotionFadeImage({
   );
 }
 
+/** Smaller, compressed Cloudinary rendition for grid cards. */
+function cloudinaryVideoThumb(url: string, width = 480): string {
+  return url.replace(/(res\.cloudinary\.com\/[^/]+\/video\/upload\/)/, `$1w_${width},q_auto/`);
+}
+
+/**
+ * Grid-card video: plays muted on loop by itself, but only while the card is
+ * on screen — off-screen cards pause and don't download, so a big grid stays light.
+ */
+function AutoplayThumbVideo({ src, poster }: { src: string; poster: string | null }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { rootMargin: "100px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (visible) {
+      setLoaded(true);
+      el.play().catch(() => {});
+    } else el.pause();
+  }, [visible, loaded]);
+
+  return (
+    <video
+      ref={ref}
+      src={loaded ? cloudinaryVideoThumb(src) : undefined}
+      poster={poster ?? undefined}
+      className="h-full w-full object-cover"
+      preload="none"
+      autoPlay
+      loop
+      muted
+      playsInline
+    />
+  );
+}
+
 /**
  * Renders the best available media for an exercise, in priority order:
  * 1) uploaded video  2) YouTube (thumbnail or real player)  3) start/end photo cross-fade  4) icon.
@@ -133,18 +179,12 @@ export function ExerciseMedia({
 }) {
   const thumb = variant === "thumbnail";
 
-  // Lists: a still frame instead of an autoplaying video per card — a grid of
-  // 24 cards would otherwise download and play 24 videos at once.
+  // Lists: autoplay muted on loop, but only for cards currently on screen.
   if (media.videoUrl && thumb) {
-    const poster = cloudinaryVideoPoster(media.videoUrl);
     return (
       <div className={className}>
-        <div className="relative flex h-full w-full items-center justify-center bg-black">
-          {poster ? (
-            <Image src={poster} alt={alt} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" unoptimized />
-          ) : (
-            <video src={media.videoUrl} className="h-full w-full object-contain" preload="metadata" muted playsInline />
-          )}
+        <div className="relative flex h-full w-full items-center justify-center bg-black" aria-label={alt}>
+          <AutoplayThumbVideo src={media.videoUrl} poster={cloudinaryVideoPoster(media.videoUrl)} />
         </div>
       </div>
     );
