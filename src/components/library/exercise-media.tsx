@@ -142,6 +142,9 @@ function AutoplayThumbVideo({ src, poster }: { src: string; poster: string | nul
 
   return (
     <video
+      controlsList="nodownload noremoteplayback"
+      disablePictureInPicture
+      draggable={false}
       ref={ref}
       src={loaded ? cloudinaryVideoThumb(src) : undefined}
       poster={poster ?? undefined}
@@ -164,7 +167,7 @@ function AutoplayThumbVideo({ src, poster }: { src: string; poster: string | nul
  * is shown (grids, programs, templates, history, reports, PR cards...) stays a lightweight
  * static thumbnail to avoid loading many iframes at once.
  */
-export function ExerciseMedia({
+function ExerciseMediaInner({
   media,
   alt,
   className,
@@ -195,6 +198,9 @@ export function ExerciseMedia({
       <div className={className}>
         <div className="flex h-full w-full items-center justify-center bg-black">
           <video
+            controlsList="nodownload noremoteplayback"
+            disablePictureInPicture
+            draggable={false}
             src={media.videoUrl}
             className="h-full w-full object-contain"
             autoPlay
@@ -240,5 +246,25 @@ export function ExerciseMedia({
     <div className={className}>
       <Dumbbell className={iconClassName ?? "h-10 w-10 text-muted-foreground/40"} />
     </div>
+  );
+}
+
+const block = (e: React.SyntheticEvent) => e.preventDefault();
+
+/**
+ * Exercise media is the coach's own content: block the browser's
+ * "Save image/video as" (right-click / long-press) and drag-to-desktop.
+ * This deters casual saving; it can't stop screen recording.
+ */
+export function ExerciseMedia(props: Parameters<typeof ExerciseMediaInner>[0]) {
+  return (
+    <span
+      className="contents"
+      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
+      onContextMenu={block}
+      onDragStart={block}
+    >
+      <ExerciseMediaInner {...props} />
+    </span>
   );
 }
