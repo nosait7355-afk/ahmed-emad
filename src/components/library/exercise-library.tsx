@@ -199,7 +199,7 @@ export function ExerciseLibrary({
         <EmptyState icon={Dumbbell} title={t.common.noResults} description={t.common.emptyDescription} />
       ) : (
         <>
-          <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
+          <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
             {items.map((e) => (
               <Card key={e._id} className="overflow-hidden transition-shadow hover:shadow-md">
                 <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-muted">
@@ -234,14 +234,14 @@ export function ExerciseLibrary({
                     </DropdownMenu>
                   )}
                 </div>
-                <CardContent className="space-y-1.5 p-4">
-                  <h3 className="font-semibold leading-tight">{locale === "ar" ? e.nameAr : e.nameEn}</h3>
+                <CardContent className="space-y-1.5 p-2.5 sm:p-4">
+                  <h3 className="text-sm font-semibold leading-tight sm:text-base">{locale === "ar" ? e.nameAr : e.nameEn}</h3>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Badge variant="outline">{label(EXERCISE_CATEGORY_LABELS, e.category, locale)}</Badge>
                     {e.youtubeUrl && <Youtube className="h-4 w-4 text-destructive" />}
                   </div>
                   {e.targetMuscles && e.targetMuscles.length > 0 && (
-                    <p className="text-xs text-muted-foreground">{e.targetMuscles.join("، ")}</p>
+                    <p className="hidden text-xs text-muted-foreground sm:block">{e.targetMuscles.join("، ")}</p>
                   )}
                 </CardContent>
               </Card>
