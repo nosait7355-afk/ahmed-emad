@@ -288,11 +288,10 @@ function ExerciseViewDialog({
   const { t, locale } = useI18n();
   if (!exercise) return null;
   const name = locale === "ar" ? exercise.nameAr : exercise.nameEn;
-  const instructions = locale === "ar" ? exercise.instructions?.ar : exercise.instructions?.en;
 
   return (
     <Dialog open={!!exercise} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>
@@ -311,7 +310,22 @@ function ExerciseViewDialog({
         {exercise.targetMuscles && exercise.targetMuscles.length > 0 && (
           <p className="text-sm text-muted-foreground">{exercise.targetMuscles.join("، ")}</p>
         )}
-        {instructions && <p className="text-sm leading-relaxed">{instructions}</p>}
+        {(
+          [
+            [locale === "ar" ? "الوصف" : "Description", exercise.description],
+            [locale === "ar" ? "طريقة الأداء" : "How to perform", exercise.instructions],
+            [locale === "ar" ? "أخطاء شائعة" : "Common mistakes", exercise.commonMistakes],
+            [locale === "ar" ? "نصائح المدرب" : "Coach tips", exercise.coachTips],
+          ] as const
+        ).map(([title, text]) => {
+          const value = locale === "ar" ? text?.ar : text?.en;
+          return value ? (
+            <div key={title} className="space-y-1">
+              <h4 className="text-sm font-semibold">{title}</h4>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{value}</p>
+            </div>
+          ) : null;
+        })}
       </DialogContent>
     </Dialog>
   );

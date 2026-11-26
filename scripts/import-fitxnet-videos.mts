@@ -26,8 +26,13 @@ const SRC = resolve(process.cwd(), "تمارين fitxnet - علامة Fitxnet");
 const FOLDER = "ahmed-emad/system/exercises";
 const SOURCE = "fitxnet";
 
-type Cat = "chest" | "back" | "shoulders" | "legs" | "glutes";
+/** Exercises the coach deliberately deleted from the library — never re-import. */
+const SKIP = new Set(["ظهر/سحب أمامي بالكابل"]);
+
+type Cat = "chest" | "back" | "shoulders" | "biceps" | "triceps" | "legs" | "glutes";
 const FOLDERS: Record<string, { category: Cat; muscles: string[] }> = {
+  "باي": { category: "biceps", muscles: ["biceps"] },
+  "تراي": { category: "triceps", muscles: ["triceps"] },
   "صدر": { category: "chest", muscles: ["chest"] },
   "ظهر": { category: "back", muscles: ["lats", "middle back"] },
   "كتف": { category: "shoulders", muscles: ["shoulders"] },
@@ -85,6 +90,81 @@ const EN: Record<string, string> = {
   "بنش برس عالي بالبار": "Incline Barbell Bench Press",
   "كروس اوفر سفلي": "Low Cable Crossover",
   "بنش برس مستوي بالبار": "Barbell Bench Press",
+  // ── batch 2 ──
+  "جود مورنينج بالبار": "Barbell Good Morning",
+  "باي دمبل بالتبادل واقف": "Alternating Dumbbell Curl",
+  "سوبرمان": "Superman",
+  "هايبر اكستنشن": "Back Hyperextension",
+  "باي دمبل على بنش مائل": "Incline Dumbbell Curl",
+  "باي دمبل بالتبادل واقف 2": "Alternating Dumbbell Curl (Variation)",
+  "باي كابل بذراع واحدة": "Single-Arm Cable Curl",
+  "باي بار": "Barbell Curl",
+  "باي سكوت بالبار Z": "EZ-Bar Preacher Curl",
+  "كونسنتريشن كيرل": "Concentration Curl",
+  "باي كابل بالبار": "Cable Bar Curl",
+  "باي بار Z": "EZ-Bar Curl",
+  "باي دمبل بالإيدين مع بعض": "Dumbbell Biceps Curl",
+  "هامر كابل بالحبل": "Cable Rope Hammer Curl",
+  "هامر دمبل": "Dumbbell Hammer Curl",
+  "باي بار قبضة واسعة": "Wide-Grip Barbell Curl",
+  "باي كابل بالبار 2": "Cable Bar Curl (Variation)",
+  "سبايدر كيرل بالبار": "Barbell Spider Curl",
+  "باي كابل عالي": "High Cable Curl",
+  "باي سكوت بالماكينة": "Machine Preacher Curl",
+  "باي دمبل 3": "Dumbbell Curl (Variation)",
+  "باي بار قبضة ضيقة": "Close-Grip Barbell Curl",
+  "تجديف معكوس تحت الترابيزة": "Table Inverted Row",
+  "تجديف بالفوطة على الباب": "Door Towel Row",
+  "عقلة قبضة عكسية": "Chin-Up",
+  "عقلة واسعة": "Wide-Grip Pull-Up",
+  "ضغط قبضة ضيقة": "Close-Grip Push-Up",
+  "عقلة قبضة ضيقة": "Close-Grip Pull-Up",
+  "تجديف بالحلقات": "Ring Row",
+  "تراي دمبل خلف الراس بذراع واحدة": "One-Arm Overhead Dumbbell Extension",
+  "تراي دمبل خلف الراس بالإيدين": "Two-Hand Overhead Dumbbell Extension",
+  "سكال كراشر بالبار Z": "EZ-Bar Skull Crusher",
+  "سكال كراشر بالدمبل": "Dumbbell Skull Crusher",
+  "كيك باك دمبل": "Dumbbell Kickback",
+  "بنش برس قبضة ضيقة": "Close-Grip Bench Press",
+  "سكال كراشر على بنش مائل": "Incline Skull Crusher",
+  "تراي كابل بالحبل": "Cable Rope Pushdown",
+  "تراي كابل بالبار": "Cable Bar Pushdown",
+  "تراي كابل قبضة عكسية": "Reverse-Grip Cable Pushdown",
+  "تراي كابل بالحبل 2": "Cable Rope Pushdown (Variation)",
+  "تراي كابل وانت راكع": "Kneeling Cable Pushdown",
+  "ديبس على المتوازي": "Parallel Bar Dips",
+  "ديبس على البنش": "Bench Dips",
+  "ضغط دايموند": "Diamond Push-Up",
+  "ديبس بالماكينة": "Machine Dips",
+  "ضغط كتف بالبار واقف": "Standing Barbell Overhead Press",
+  "ضغط كتف دمبل جالس": "Seated Dumbbell Shoulder Press",
+  "رفرفة جانبي بالدمبل": "Dumbbell Lateral Raise",
+  "رفرفة أمامي بالدمبل": "Dumbbell Front Raise",
+  "رفرفة خلفي بالدمبل واقف": "Standing Bent-Over Rear Delt Fly",
+  "أرنولد برس": "Arnold Press",
+  "سحب عالي بالبار": "Barbell Upright Row",
+  "ضغط كتف بالبار جالس": "Seated Barbell Shoulder Press",
+  "رفرفة خلفي على بنش مائل": "Incline Bench Rear Delt Fly",
+  "رفرفة جانبي على بنش مائل": "Incline Bench Lateral Raise",
+  "رفرفة جانبي بالكابل": "Cable Lateral Raise",
+  "رفرفة خلفي بالكابل": "Cable Rear Delt Fly",
+  "فيس بول": "Face Pull",
+  "رفرفة أمامي بالكابل": "Cable Front Raise",
+  "سحب عالي بالكابل": "Cable Upright Row",
+  "ضغط كتف بالماكينة": "Machine Shoulder Press",
+  "رفرفة جانبي بالماكينة": "Machine Lateral Raise",
+  "رفرفة خلفي بالماكينة": "Reverse Pec Deck",
+  "بايك بوش اب": "Pike Push-Up",
+  "ضغط وقوف على الإيدين على الحائط": "Wall Handstand Push-Up",
+  "هيب ثرست بالبار": "Barbell Hip Thrust",
+  "بلغاري سبليت سكوات بالدمبل": "Dumbbell Bulgarian Split Squat",
+  "رومانيان ديدلفت بالبار 2": "Barbell Romanian Deadlift (Variation)",
+  "رفع رجل جانبي نايم": "Side-Lying Leg Raise",
+  "ركلة خلفية بالكابل": "Cable Glute Kickback",
+  "ضم الفخد بالماكينة": "Machine Hip Adduction",
+  "فتح الفخد بالماكينة": "Machine Hip Abduction",
+  "جلوت بريدج": "Glute Bridge",
+  "مشي جانبي بالأستك": "Banded Lateral Walk",
 };
 
 async function upload(path: string, publicId: string) {
@@ -115,6 +195,7 @@ async function ensureResolvable() {
   const [, userinfo, host, db, query] = m;
   const srvOut = execFileSync("nslookup", ["-type=SRV", `_mongodb._tcp.${host}`], { encoding: "utf-8" });
   const hosts = [...srvOut.matchAll(/svr hostname\s*=\s*(\S+)/g)].map((x) => `${x[1]}:27017`);
+  if (!hosts.length) return; // lookup failed — let the driver try the SRV URI itself
   const txtOut = execFileSync("nslookup", ["-type=TXT", host], { encoding: "utf-8" });
   const txt = txtOut.match(/"([^"]+)"/)?.[1] ?? "";
   const params = new URLSearchParams((query ?? "?").replace(/^\?/, ""));
@@ -136,6 +217,7 @@ async function main() {
       const nameAr = file.replace(/\.mp4$/, "");
       const nameEn = EN[nameAr];
       const externalId = `${dir}/${nameAr}`;
+      if (SKIP.has(externalId)) { skipped++; continue; }
       if (!nameEn) { console.warn(`No English name: ${externalId}`); failed++; continue; }
       if (await Exercise.exists({ importSource: SOURCE, externalId })) { skipped++; continue; }
       try {
