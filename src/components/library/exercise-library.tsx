@@ -199,7 +199,7 @@ export function ExerciseLibrary({
         <EmptyState icon={Dumbbell} title={t.common.noResults} description={t.common.emptyDescription} />
       ) : (
         <>
-          <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
+          <div className={`grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 ${isPending ? "opacity-60" : ""}`}>
             {items.map((e) => (
               <Card key={e._id} className="overflow-hidden transition-shadow hover:shadow-md">
                 <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted">
@@ -285,7 +285,7 @@ function ExerciseViewDialog({
   exercise: ExerciseItem | null;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { t, locale } = useI18n();
+  const { locale } = useI18n();
   if (!exercise) return null;
   const name = locale === "ar" ? exercise.nameAr : exercise.nameEn;
 

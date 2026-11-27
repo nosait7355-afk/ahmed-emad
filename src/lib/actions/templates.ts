@@ -41,6 +41,36 @@ async function resolveScope(): Promise<Scope> {
 
 /* ---- Workout templates ---- */
 
+export interface WorkoutTemplatePickerItem {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  weeks: IWorkoutWeek[];
+  dayCount: number;
+  exerciseCount: number;
+}
+
+/** Read-only list of the coach's workout templates for the "start from template" picker. */
+export async function listWorkoutTemplatesForPickerAction(): Promise<ActionResult<WorkoutTemplatePickerItem[]>> {
+  return runAction(async () => {
+    const scope = await resolveScope();
+    const raw = await wt.listWorkoutTemplates(scope);
+    return ok(
+      raw.map((tpl) => {
+        const weeks = (tpl.weeks ?? []) as IWorkoutWeek[];
+        return {
+          id: String(tpl._id),
+          nameAr: tpl.nameAr,
+          nameEn: tpl.nameEn,
+          weeks,
+          dayCount: weeks.reduce((s, w) => s + (w.days?.length ?? 0), 0),
+          exerciseCount: weeks.reduce((s, w) => s + (w.days ?? []).reduce((n, d) => n + (d.exercises?.length ?? 0), 0), 0),
+        };
+      }),
+    );
+  });
+}
+
 export interface WorkoutTplInput {
   nameAr: string;
   nameEn: string;

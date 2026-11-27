@@ -164,20 +164,20 @@ export function WorkoutExecution({
                 </Button>
               </div>
               {di === di2 && d.exercises.length > 0 && (
-                <div className="mt-3 space-y-2 border-t pt-3">
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3">
                   {d.exercises.map((ex, ei) => (
-                    <div key={ei} className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                    <div key={ei} className="overflow-hidden rounded-lg border">
+                      <div className="relative aspect-video bg-muted">
                         <ExerciseMedia
-                          media={{ imageUrlStart: ex.imageUrlStart, imageUrlEnd: ex.imageUrlEnd, gifUrl: ex.gifUrl }}
+                          media={{ videoUrl: ex.videoUrl, youtubeUrl: ex.youtubeUrl, imageUrlStart: ex.imageUrlStart, imageUrlEnd: ex.imageUrlEnd, gifUrl: ex.gifUrl }}
                           alt={locale === "ar" ? ex.nameAr : ex.nameEn}
                           className="absolute inset-0 flex h-full w-full items-center justify-center overflow-hidden"
-                          iconClassName="h-5 w-5 text-muted-foreground/40"
+                          iconClassName="h-6 w-6 text-muted-foreground/40"
                         />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{locale === "ar" ? ex.nameAr : ex.nameEn}</p>
-                        <p className="text-xs text-muted-foreground">{ex.sets} {t.client.sets} × {ex.reps} {t.client.reps}</p>
+                      <div className="p-2">
+                        <p className="truncate text-xs font-medium">{locale === "ar" ? ex.nameAr : ex.nameEn}</p>
+                        <p className="text-[11px] text-muted-foreground">{ex.sets} × {ex.reps}</p>
                       </div>
                     </div>
                   ))}
@@ -198,13 +198,13 @@ export function WorkoutExecution({
             <Play className="h-4 w-4" />{L("ابدأ الآن", "Start now")}
           </Button>
 
-          <div className="space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2">
             {day.exercises.map((ex, ei) => (
               <Card key={ei}>
                 <CardContent className="flex items-center gap-3 p-3">
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                     <ExerciseMedia
-                      media={{ imageUrlStart: ex.imageUrlStart, imageUrlEnd: ex.imageUrlEnd, gifUrl: ex.gifUrl }}
+                      media={{ videoUrl: ex.videoUrl, youtubeUrl: ex.youtubeUrl, imageUrlStart: ex.imageUrlStart, imageUrlEnd: ex.imageUrlEnd, gifUrl: ex.gifUrl }}
                       alt={locale === "ar" ? ex.nameAr : ex.nameEn}
                       className="absolute inset-0 flex h-full w-full items-center justify-center overflow-hidden"
                       iconClassName="h-6 w-6 text-muted-foreground/40"

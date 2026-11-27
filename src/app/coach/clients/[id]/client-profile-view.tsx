@@ -27,6 +27,8 @@ import {
   PlayCircle,
   Snowflake,
   XCircle,
+  LayoutTemplate,
+  FilePlus,
 } from "lucide-react";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -64,7 +66,9 @@ import { updateClientAction, deleteClientAction, resetClientPasswordAction } fro
 import { resumeClientAction, cancelClientAction } from "@/lib/actions/subscription-freeze";
 import { FreezeDialog, RenewDialog } from "@/components/coach/subscription-dialogs";
 import { startConversationAction } from "@/lib/actions/messages";
+import { listWorkoutTemplatesForPickerAction, type WorkoutTemplatePickerItem } from "@/lib/actions/templates";
 import {
+  assignTemplateAction,
   createBlankProgramAction,
   createBlankNutritionPlanAction,
   saveProgramBuilderAction,
@@ -188,6 +192,11 @@ export function ClientProfileView({
   const [creatingPlan, startCreatingPlan] = useTransition();
   const [isPending, startTransition] = useTransition();
   const [programState, setProgramState] = useState(program);
+  const [tplOpen, setTplOpen] = useState(false);
+  const [templates, setTemplates] = useState<WorkoutTemplatePickerItem[] | null>(null);
+  const [tplLoading, setTplLoading] = useState(false);
+  const [tplError, setTplError] = useState<string | null>(null);
+  const [assigningTplId, setAssigningTplId] = useState<string | null>(null);
   const [nutritionState, setNutritionState] = useState(nutritionPlan);
 
   const latest = history[history.length - 1];
@@ -244,6 +253,32 @@ export function ClientProfileView({
           nameEn,
           weeks: [{ weekNumber: 1, name: { ar: "الأسبوع 1", en: "Week 1" }, days: [] }] as unknown as IWorkoutWeek[],
         });
+      }
+    });
+  }
+
+  function openTemplatePicker() {
+    setTplOpen(true);
+    setTplError(null);
+    setTplLoading(true);
+    listWorkoutTemplatesForPickerAction().then((res) => {
+      if (res.ok) setTemplates(res.data!);
+      else setTplError(res.error ?? L("تعذّر تحميل القوالب", "Couldn't load templates"));
+      setTplLoading(false);
+    });
+  }
+
+  function startFromTemplate(tpl: WorkoutTemplatePickerItem) {
+    setTplError(null);
+    setAssigningTplId(tpl.id);
+    startCreatingProgram(async () => {
+      const res = await assignTemplateAction(tpl.id, client.id);
+      setAssigningTplId(null);
+      if (res.ok) {
+        setProgramState({ id: res.data!.id, nameAr: tpl.nameAr, nameEn: tpl.nameEn, weeks: tpl.weeks });
+        setTplOpen(false);
+      } else {
+        setTplError(res.error ?? L("تعذّر إنشاء البرنامج", "Couldn't create the program"));
       }
     });
   }
@@ -578,10 +613,16 @@ export function ClientProfileView({
               description={L("أنشئ برنامج تمرين خاصاً بهذا العميل.", "Create a workout program for this client.")}
             >
               {canWrite && (
-                <Button onClick={createProgram} disabled={creatingProgram}>
-                  {creatingProgram && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {L("إنشاء برنامج تمرين", "Create workout program")}
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button onClick={openTemplatePicker} disabled={creatingProgram} className="gap-2">
+                    <LayoutTemplate className="h-4 w-4" />
+                    {L("ابدأ من قالب", "Start from template")}
+                  </Button>
+                  <Button variant="outline" onClick={createProgram} disabled={creatingProgram} className="gap-2">
+                    {creatingProgram && !assigningTplId ? <Loader2 className="h-4 w-4 animate-spin" /> : <FilePlus className="h-4 w-4" />}
+                    {L("ابدأ من جديد", "Start from scratch")}
+                  </Button>
+                </div>
               )}
             </EmptyState>
           )}
@@ -674,6 +715,48 @@ export function ClientProfileView({
           />
         </>
       )}
+
+      <Dialog open={tplOpen} onOpenChange={(o) => { if (!creatingProgram) setTplOpen(o); }}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{L("ابدأ من قالب", "Start from a template")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            {L("سيتم نسخ القالب للعميل كنسخة مستقلة — تعديلها لا يؤثر على القالب.", "The template is copied to this client as an independent copy — editing it never changes the template.")}
+          </p>
+          {tplError && <p className="text-sm text-destructive">{tplError}</p>}
+          {tplLoading ? (
+            <p className="py-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></p>
+          ) : templates && templates.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {L("لا توجد قوالب تمرين بعد.", "No workout templates yet.")}{" "}
+              <Link href="/coach/templates" className="text-primary underline-offset-4 hover:underline">{L("أنشئ قالباً", "Create one")}</Link>
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {templates?.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  disabled={creatingProgram}
+                  onClick={() => startFromTemplate(tpl)}
+                  className="flex w-full items-center gap-3 rounded-lg border p-3 text-start transition-colors hover:bg-accent disabled:opacity-60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {assigningTplId === tpl.id ? <Loader2 className="h-5 w-5 animate-spin" /> : <LayoutTemplate className="h-5 w-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{locale === "ar" ? tpl.nameAr : tpl.nameEn}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {L(`${tpl.dayCount} أيام · ${tpl.exerciseCount} تمرين`, `${tpl.dayCount} days · ${tpl.exerciseCount} exercises`)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
